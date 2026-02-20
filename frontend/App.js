@@ -25,7 +25,7 @@ const firebaseConfig = {
   measurementId: "G-2VPF0FER2N"
 };
 
-const BACKEND_URL = 'http://192.168.0.137:5000'; // Ensure this matches your IPv4
+const BACKEND_URL = 'http://192.168.0.195:5000'; // Ensure this matches your IPv4
 
 const app = initializeApp(firebaseConfig);
 const getPersistenceMethod = () => Platform.OS === 'web' ? browserLocalPersistence : getReactNativePersistence(AsyncStorage);
@@ -548,6 +548,20 @@ const VolunteerDashboard = ({ userData, handleLogout }) => {
   const [loading, setLoading] = useState(false);
   const [generatingPosterFor, setGeneratingPosterFor] = useState(null); // For per-event loading
 
+  // NEW: Store generated posters, captions, and visibility state
+  const [posterDataMap, setPosterDataMap] = useState({});
+
+  // NEW: Toggle visibility of the poster and captions
+  const togglePosterView = (eventId) => {
+    setPosterDataMap(prev => ({
+      ...prev,
+      [eventId]: {
+        ...prev[eventId],
+        isVisible: !prev[eventId].isVisible
+      }
+    }));
+  };
+
   useEffect(() => {
     fetchMyEvents();
   }, []);
@@ -580,29 +594,59 @@ const VolunteerDashboard = ({ userData, handleLogout }) => {
   };
 
   // NEW: Generate Poster Handler
+  // const handleGeneratePoster = async (eventId, eventName) => {
+  //   setGeneratingPosterFor(eventId);
+  //   try {
+  //     const res = await axios.post(`${BACKEND_URL}/api/events/${eventId}/generate-poster`, {
+  //       // Optional: send any overrides or preferences
+  //       eventName: eventName, // For logging/customization
+  //     });
+      
+  //     if (res.data.success && res.data.posterUrl) {
+  //       Alert.alert(
+  //         'Poster Generated! 🎉',
+  //         `Your poster for "${eventName}" is ready.`,
+  //         [
+  //           { 
+  //             text: 'View Poster', 
+  //             onPress: () => Linking.openURL(res.data.posterUrl) 
+  //           },
+  //           { text: 'OK' }
+  //         ]
+  //       );
+        
+  //       // Optional: Refresh events if needed (e.g., if you store posterUrl in DB)
+  //       // fetchMyEvents();
+  //     } else {
+  //       Alert.alert('Error', res.data.message || 'Failed to generate poster');
+  //     }
+  //   } catch (err) {
+  //     console.error('Poster generation error:', err);
+  //     Alert.alert('Error', 'Could not generate poster. Please try again.');
+  //   } finally {
+  //     setGeneratingPosterFor(null);
+  //   }
+  // };
+
   const handleGeneratePoster = async (eventId, eventName) => {
     setGeneratingPosterFor(eventId);
     try {
       const res = await axios.post(`${BACKEND_URL}/api/events/${eventId}/generate-poster`, {
-        // Optional: send any overrides or preferences
-        eventName: eventName, // For logging/customization
+        eventName: eventName, 
       });
       
       if (res.data.success && res.data.posterUrl) {
-        Alert.alert(
-          'Poster Generated! 🎉',
-          `Your poster for "${eventName}" is ready.`,
-          [
-            { 
-              text: 'View Poster', 
-              onPress: () => Linking.openURL(res.data.posterUrl) 
-            },
-            { text: 'OK' }
-          ]
-        );
-        
-        // Optional: Refresh events if needed (e.g., if you store posterUrl in DB)
-        // fetchMyEvents();
+        // NEW: Save poster URL and captions to state, hidden by default
+        setPosterDataMap(prev => ({
+          ...prev,
+          [eventId]: {
+            url: res.data.posterUrl,
+            captions: res.data.captions, // Ensure your backend sends this object
+            isVisible: false 
+          }
+        }));
+
+        Alert.alert('Poster Generated! 🎉', `Your poster for "${eventName}" is ready. Click 'View Poster' to see it.`);
       } else {
         Alert.alert('Error', res.data.message || 'Failed to generate poster');
       }
@@ -639,61 +683,128 @@ const VolunteerDashboard = ({ userData, handleLogout }) => {
             <Text style={styles.buttonText}>+ Add New Event</Text>
           </TouchableOpacity>
           
-          {myEvents.map(ev => (
-            <View key={ev._id} style={[styles.eventCard, { padding: 15, position: 'relative' }]}>
-              {/* Event Details */}
-              <Text style={styles.eventTitle}>{ev.name}</Text>
-              <Text style={{ color: THEME.green, fontWeight: 'bold', marginTop: 5 }}>
-                Volunteers Joined: {ev.participants?.length || 0}
-              </Text>
-              
-              {/* Participants List */}
-              {ev.participants?.length > 0 && (
-                <View style={{ marginTop: 8, marginBottom: 12 }}>
-                  {ev.participants.map((p, i) => (
-                    <Text key={i} style={{ fontSize: 12, color: '#666' }}>
-                      • {p.name}
-                    </Text>
-                  ))}
+          {myEvents.map(ev => {
+            // Check if we have generated poster data for this specific event
+            const hasPosterData = posterDataMap[ev._id];
+
+            return (
+              <View key={ev._id} style={[styles.eventCard, { padding: 15, position: 'relative' }]}>
+                
+                {/* Event Details - Wrapped in a View with paddingRight to avoid overlapping buttons */}
+                <View style={{ paddingRight: 130 }}> 
+                  <Text style={styles.eventTitle}>{ev.name}</Text>
+                  <Text style={{ color: THEME.green, fontWeight: 'bold', marginTop: 5 }}>
+                    Volunteers Joined: {ev.participants?.length || 0}
+                  </Text>
+                  
+                  {/* Participants List */}
+                  {ev.participants?.length > 0 && (
+                    <View style={{ marginTop: 8, marginBottom: 12 }}>
+                      {ev.participants.map((p, i) => (
+                        <Text key={i} style={{ fontSize: 12, color: '#666' }}>
+                          • {p.name}
+                        </Text>
+                      ))}
+                    </View>
+                  )}
                 </View>
-              )}
 
-              {/* Generate Poster Button - Positioned at the RIGHT */}
-              <TouchableOpacity
-  style={{
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    backgroundColor: '#FF6B35',          // nice vibrant orange
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.18,
-    shadowRadius: 2,
-    elevation: 2,
-    minWidth: 110,                       // keeps it compact
-  }}
-  onPress={() => handleGeneratePoster(ev._id, ev.name)}
-  disabled={generatingPosterFor === ev._id}
->
-  <Text style={{
-    color: 'white',
-    fontSize: 13,
-    fontWeight: '600',
-  }}>
-    {generatingPosterFor === ev._id ? 'Generating…' : 'Generate Poster'}
-  </Text>
+                {/* Action Buttons Container - Positioned Top Right */}
+                <View style={{ position: 'absolute', top: 16, right: 16, alignItems: 'flex-end', gap: 8 }}>
+                  
+                  {/* Generate Poster Button */}
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: '#FF6B35',
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderRadius: 6,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.18,
+                      shadowRadius: 2,
+                      elevation: 2,
+                      minWidth: 110,
+                    }}
+                    onPress={() => handleGeneratePoster(ev._id, ev.name)}
+                    disabled={generatingPosterFor === ev._id}
+                  >
+                    <Text style={{ color: 'white', fontSize: 13, fontWeight: '600' }}>
+                      {generatingPosterFor === ev._id ? 'Generating…' : 'Generate Poster'}
+                    </Text>
+                    <Text style={{ fontSize: 14 }}></Text>
+                  </TouchableOpacity>
 
-  {/* Optional small icon – emoji or lucide/react-native icon */}
-  <Text style={{ fontSize: 14 }}>🖼️</Text>
-  </TouchableOpacity>
+                  {/* View/Hide Poster Button (Only shows if poster exists) */}
+                  {hasPosterData && (
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: '#2A9D8F',
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        borderRadius: 6,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        elevation: 2,
+                        minWidth: 110,
+                      }}
+                      onPress={() => togglePosterView(ev._id)}
+                    >
+                      <Text style={{ color: 'white', fontSize: 13, fontWeight: '600' }}>
+                        {hasPosterData.isVisible ? 'Hide Poster' : 'View Poster'} 
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                {/* Expandable Poster & Captions Section */}
+                {hasPosterData && hasPosterData.isVisible && (
+                  <View style={{ marginTop: 20, paddingTop: 15, borderTopWidth: 1, borderColor: '#eee' }}>
+                    
+                    {/* The Generated Image */}
+                    <Image 
+                      source={{ uri: hasPosterData.url }} 
+                      style={{ width: '100%', height: 350, resizeMode: 'contain', borderRadius: 8, backgroundColor: '#f0f0f0' }} 
+                    />
+                    
+                    {/* The Generated Captions */}
+                    {hasPosterData.captions && (
+                      <View style={{ marginTop: 15, gap: 12 }}>
+                        <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#333' }}>Social Media Captions:</Text>
+                        
+                        {hasPosterData.captions.Instagram && (
+                          <View>
+                            <Text style={{ fontWeight: '600', color: '#E1306C' }}>Instagram</Text>
+                            <Text style={{ fontSize: 13, color: '#555', marginTop: 4 }}>{hasPosterData.captions.Instagram}</Text>
+                          </View>
+                        )}
+                        
+                        {hasPosterData.captions.Facebook && (
+                          <View>
+                            <Text style={{ fontWeight: '600', color: '#1877F2' }}>Facebook</Text>
+                            <Text style={{ fontSize: 13, color: '#555', marginTop: 4 }}>{hasPosterData.captions.Facebook}</Text>
+                          </View>
+                        )}
+                        
+                        {hasPosterData.captions.LinkedIn && (
+                          <View>
+                            <Text style={{ fontWeight: '600', color: '#0A66C2' }}>LinkedIn</Text>
+                            <Text style={{ fontSize: 13, color: '#555', marginTop: 4 }}>{hasPosterData.captions.LinkedIn}</Text>
+                          </View>
+                        )}
+                      </View>
+                    )}
+                  </View>
+                )}
+
               </View>
-            ))}
+            );
+          })}
           
             {myEvents.length === 0 && (
               <View style={{ padding: 40, alignItems: 'center' }}>

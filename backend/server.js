@@ -17,7 +17,8 @@ const path = require('path');
 // --- Middleware ---
 app.use(cors());
 app.use(express.json());
-app.use('/generated_posters', express.static(path.join(__dirname, 'generated_posters')));
+app.use('/posters', express.static(path.join(__dirname, 'posters'))); 
+
 // --- Database Connection ---
 mongoose.connect(MONGO_URI)
   .then(() => console.log('MongoDB connection successful!'))

@@ -185,15 +185,25 @@ exports.generateEventPoster = async (req, res) => {
         });
       }
 
-      const filename = path.basename(posterPath);
-      const baseUrl = process.env.BASE_URL || 'http://192.168.137.5000';
-      const posterUrl = `${baseUrl}/generated_posters/${filename}`;
+      // const filename = path.basename(posterPath);
+      // const baseUrl = process.env.BASE_URL || 'http://192.168.0.195:5000';
+      // const posterUrl = `${baseUrl}/SwachhMitra/backend/posters/${filename}`;
 
-      console.log(`[generateEventPoster] Success - URL: ${posterUrl}`);
+      // console.log(`[generateEventPoster] Success - URL: ${posterUrl}`);
+
+      
+      // 1. Get just the filename (e.g., "poster_BEACH_CLEAN_UP_20260220_143733.png")
+      const filename = path.basename(posterPath);
+      
+      // 2. Build the clean URL that matches server.js
+      const baseUrl = 'http://192.168.0.195:5000'; 
+      const posterUrl = `${baseUrl}/posters/${filename}`; 
+
+      console.log(`[generateEventPoster] Success - Clean URL: ${posterUrl}`);
 
       res.json({
         success: true,
-        posterUrl,
+        posterUrl:posterUrl,
         eventName: event.name
       });
     });
