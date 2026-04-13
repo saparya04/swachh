@@ -14,4 +14,9 @@ router.get('/volunteer-report/:firebaseUid',  ctrl.getVolunteerReport);
 router.post('/geofence/location',              ctrl.postGeofenceLocation);
 router.get('/:eventId/geofence-attendance',    ctrl.getGeofenceAttendance);
 
+const reportController = require('../controllers/reportController');
+
+// Existing routes...
+router.get('/report/:eventId', reportController.getEventReport);
+
 module.exports = router;

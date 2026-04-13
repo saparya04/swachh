@@ -18,7 +18,7 @@ import { Picker } from '@react-native-picker/picker';
 import LeafletPolygonPicker from './components/LeafletPolygonPicker';
 import io from 'socket.io-client';
 
-const socket = io('http://192.168.1.8:5000', { transports: ['websocket'], autoConnect: true });
+const socket = io('http://192.168.0.102:5000', { transports: ['websocket'], autoConnect: true });
 
 const firebaseConfig = {
   apiKey: "AIzaSyCTL_q0pfcj0Ut0_20MnR8GThLi9kc5U-E",
@@ -30,9 +30,9 @@ const firebaseConfig = {
   measurementId: "G-2VPF0FER2N"
 };
 
-const BACKEND_URL = 'http://192.168.1.8:5000';
-const BASE_URL    = 'http://192.168.1.8:5000/api';
-const FLASK_URL   = 'http://192.168.1.8:5001';
+const BACKEND_URL = 'http://192.168.0.102:5000';
+const BASE_URL    = 'http://192.168.0.102:5000/api';
+const FLASK_URL   = 'http://192.168.0.102:5001';
 
 const app = initializeApp(firebaseConfig);
 const getPersistenceMethod = () =>
@@ -1791,26 +1791,120 @@ const OrganiserDashboard = ({ userData, handleLogout, setChatParams }) => {
   );
 };
 
+// const CSRDashboard = ({ userData, handleLogout, setChatParams }) => {
+//   const [activeTab, setActiveTab] = useState('Home');
+//   const tabs = ['Home', 'Reports', 'Messages', 'Rewards', 'Settings'];
+//   const renderContent = () => {
+//     switch (activeTab) {
+//       case 'Home':     return <CSRHome userData={userData} />;
+//       case 'Reports':  return <ReportsScreen userData={userData} />;
+//       case 'Messages': return <ChatListView userData={userData} onSelectChat={setChatParams} />;
+//       case 'Rewards':  return <RewardsScreen userData={userData} />;
+//       case 'Settings': return <SettingsScreen userData={userData} handleLogout={handleLogout} />;
+//       default: return <View style={S.fullCenter}><Text>Coming soon</Text></View>;
+//     }
+//   };
+//   return (
+//     <View style={S.flex}>
+//       <View style={S.flex}>{renderContent()}</View>
+//       <TabBar activeTab={activeTab} setActiveTab={setActiveTab} tabs={tabs} />
+//     </View>
+//   );
+// };
 const CSRDashboard = ({ userData, handleLogout, setChatParams }) => {
   const [activeTab, setActiveTab] = useState('Home');
-  const tabs = ['Home', 'Reports', 'Messages', 'Rewards', 'Settings'];
+  const [allEvents, setAllEvents] = useState([]);
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'Reports') {
+      axios.get(`${BACKEND_URL}/api/events/all`)
+        .then(r => setAllEvents(r.data))
+        .catch(e => console.log(e));
+    }
+  }, [activeTab]);
+
+  const viewReport = async (id) => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${BASE_URL}/events/report/${id}`);
+      setSelectedReport(res.data);
+      setShowModal(true);
+    } catch {
+      Alert.alert("Error", "Could not load report.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderContent = () => {
     switch (activeTab) {
-      case 'Home':     return <CSRHome userData={userData} />;
-      case 'Reports':  return <ReportsScreen userData={userData} />;
+      case 'Home': return <CSRHome userData={userData} />;
       case 'Messages': return <ChatListView userData={userData} onSelectChat={setChatParams} />;
-      case 'Rewards':  return <RewardsScreen userData={userData} />;
+      case 'Reports': return (
+        <ScrollView style={{ flex: 1, padding: 20 }}>
+          <Text style={S.h1}>Event Impact Reports</Text>
+          <Text style={[S.body, {marginBottom: 20}]}>Verified ESG data for sponsored drives</Text>
+          {allEvents.map(ev => (
+            <TouchableOpacity key={ev._id} style={S.card} onPress={() => viewReport(ev._id)}>
+              <Text style={S.h3}>{ev.name}</Text>
+              <Text style={S.caption}>📍 {ev.location} | 📅 {new Date(ev.date).toLocaleDateString()}</Text>
+              <Text style={[S.label, {color: T.primary, marginTop: 10}]}>View Full Analytics →</Text>
+            </TouchableOpacity>
+          ))}
+          {loading && <ActivityIndicator color={T.primary} />}
+        </ScrollView>
+      );
       case 'Settings': return <SettingsScreen userData={userData} handleLogout={handleLogout} />;
       default: return <View style={S.fullCenter}><Text>Coming soon</Text></View>;
     }
   };
+
   return (
     <View style={S.flex}>
       <View style={S.flex}>{renderContent()}</View>
-      <TabBar activeTab={activeTab} setActiveTab={setActiveTab} tabs={tabs} />
+      
+      <Modal visible={showModal} animationType="slide">
+        <View style={{ flex: 1, backgroundColor: T.bg }}>
+          <GreenHeader title="Impact Report" onBack={() => setShowModal(false)} bgColor="#4527A0" />
+          <ScrollView contentContainerStyle={{ padding: 20 }}>
+            {selectedReport && (
+              <View style={S.card}>
+                <Text style={S.h2}>{selectedReport.eventTitle}</Text>
+                <Text style={S.caption}>Region: {selectedReport.region}</Text>
+                
+                <View style={S.divider} />
+                <Text style={S.label}>Participation (Verified via GPS)</Text>
+                <StatBox emoji="👥" value={selectedReport.metrics.verifiedAttendance} label="Present" />
+                <Text style={S.body}>Rate: {selectedReport.metrics.attendanceRate}</Text>
+                
+                <View style={S.divider} />
+                <Text style={S.label}>Environmental Impact (Stubbed)</Text>
+                <Text style={S.h3}>Waste: {selectedReport.metrics.totalWasteCollected}</Text>
+                <Text style={S.body}>{selectedReport.esgImpact}</Text>
+                
+                <View style={S.divider} />
+                <Text style={S.label}>CSR Financial Summary</Text>
+                <Text style={S.body}>Funds Used: {selectedReport.financials.fundUsed}</Text>
+                
+                <TouchableOpacity style={[S.btnPrimary, {marginTop: 25}]} onPress={() => Alert.alert("Download", "PDF generated and saved.")}>
+                  <Text style={S.btnText}>⬇️ Download ESG PDF</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </ScrollView>
+        </View>
+      </Modal>
+
+      <TabBar activeTab={activeTab} setActiveTab={setActiveTab} tabs={['Home', 'Reports', 'Messages', 'Settings']} />
     </View>
   );
 };
+
+
+
 
 // ── MAIN APP ──────────────────────────────────────────────────────────────────
 
