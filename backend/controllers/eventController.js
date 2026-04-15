@@ -196,8 +196,10 @@ exports.generateEventPoster = async (req, res) => {
       const filename = path.basename(posterPath);
       
       // 2. Build the clean URL that matches server.js
-      const baseUrl = 'http://192.168.0.195:5000'; 
-      const posterUrl = `${baseUrl}/posters/${filename}`; 
+      //const baseUrl = 'http://192.168.0.195:5000'; 
+      const baseUrl = 'http://192.168.0.196:5000';        //chnage url for poster on ui
+      const posterUrl = `${baseUrl}/posters/${filename}`;
+      console.log(posterUrl); 
 
       console.log(`[generateEventPoster] Success - Clean URL: ${posterUrl}`);
 
