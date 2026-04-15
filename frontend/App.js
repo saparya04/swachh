@@ -1248,19 +1248,21 @@ const OrganiserDashboard = ({ userData, handleLogout }) => {
                 <View
                   style={{
                     position: "absolute",
-                    top: 16,
+                    top: 1,
                     right: 16,
-                    alignItems: "flex-end",
-                    gap: 8,
+                    width: 130,
+                    alignItems: "stretch",
+                    //gap: 8,
                   }}
                 >
                   {/* Generate Poster Button */}
                   <TouchableOpacity
                     style={{
                       backgroundColor: "#FF6B35",
-                      paddingHorizontal: 12,
+                      paddingHorizontal:6,
                       paddingVertical: 6,
                       borderRadius: 6,
+                      marginBottom: 8,
                       flexDirection: "row",
                       alignItems: "center",
                       justifyContent: "center",
@@ -1290,19 +1292,27 @@ const OrganiserDashboard = ({ userData, handleLogout }) => {
                   </TouchableOpacity>
 
                   {/* View/Hide Poster Button (Only shows if poster exists) */}
-                  {hasPosterData && (
+                  {/* {hasPosterData && (
                     <TouchableOpacity
+                      // style={{
+                      //   backgroundColor: "#2A9D8F",
+                      //   paddingHorizontal: 12,
+                      //   paddingVertical: 6,
+                      //   borderRadius: 6,
+                      //   flexDirection: "row",
+                      //   alignItems: "center",
+                      //   justifyContent: "center",
+                      //   elevation: 2,
+                      //   minWidth: 110,
+                      // }}
+                      
                       style={{
-                        backgroundColor: "#2A9D8F",
-                        paddingHorizontal: 12,
-                        paddingVertical: 6,
-                        borderRadius: 6,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        elevation: 2,
-                        minWidth: 110,
-                      }}
+                    backgroundColor: "#2A9D8F",
+                    paddingVertical: 6,
+                    borderRadius: 6,
+                    flex: 1,
+                    alignItems: "center",
+                  }}
                       // onPress={() => togglePosterView(ev._id)}
                        onPress={() => {
                         const url = posterDataMap[ev._id].url;
@@ -1322,7 +1332,121 @@ const OrganiserDashboard = ({ userData, handleLogout }) => {
                           : "View Poster"}
                       </Text>
                     </TouchableOpacity>
-                  )}
+                  )} */}
+
+                  {/* Share Button (Only shows if poster exists) */}
+                  {/* {hasPosterData && (
+                    <TouchableOpacity
+                      // style={{
+                      //   backgroundColor: "#6C5CE7",
+                      //   paddingHorizontal: 6,
+                      //   paddingVertical: 6,
+                      //   borderRadius: 6,
+                      //   marginTop: 8,
+                      //   alignItems: "center",
+                      //   justifyContent: "center",
+                      //   minWidth: 110,
+                      // }}
+                          style={{
+                            backgroundColor: "#6C5CE7",
+                            paddingVertical: 6,
+                            borderRadius: 6,
+                            flex: 1,
+                            alignItems: "center",
+                          }}
+                      onPress={async () => {
+                        const url = posterDataMap[ev._id].url;
+
+                        try {
+                          if (navigator.share) {
+                            // ✅ Native share (mobile + supported browsers)
+                            await navigator.share({
+                              title: "Join our Cleanup Drive 🌱",
+                              text: "Check out this event!",
+                              url: url,
+                            });
+                          } else {
+                            // 🌐 Fallback → LinkedIn share
+                            window.open(
+                              `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
+                              "_blank"
+                            );
+                          }
+                        } catch (err) {
+                          console.error("Share failed:", err);
+                        }
+                      }}
+                    >
+                      <Text style={{ color: "white", fontWeight: "600" }}>
+                        Share
+                      </Text>
+                    </TouchableOpacity>
+                  )} */}
+                  {/* View + Share Row */}
+{hasPosterData && (
+  <View
+    style={{
+      flexDirection: "row",   // ✅ makes them side by side
+      gap: 6,
+      marginTop: 8,
+      width: "100%",
+    }}
+  >
+    {/* View Poster */}
+    <TouchableOpacity
+      style={{
+        backgroundColor: "#2A9D8F",
+        paddingVertical: 6,
+        borderRadius: 6,
+        flex: 1,
+        alignItems: "center",
+      }}
+      onPress={() => {
+        const url = posterDataMap[ev._id].url;
+        window.open(url, "_blank");
+      }}
+    >
+      <Text style={{ color: "white", fontSize: 13, fontWeight: "600" }}>
+        View
+      </Text>
+    </TouchableOpacity>
+
+    {/* Share Button */}
+    <TouchableOpacity
+      style={{
+        backgroundColor: "#6C5CE7",
+        paddingVertical: 6,
+        borderRadius: 6,
+        flex: 1,
+        alignItems: "center",
+      }}
+      onPress={async () => {
+        const url = posterDataMap[ev._id].url;
+
+        try {
+          if (navigator.share) {
+            await navigator.share({
+              title: "Join our Cleanup Drive 🌱",
+              text: "Check out this event!",
+              url: url,
+            });
+          } else {
+            window.open(
+              `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
+              "_blank"
+            );
+          }
+        } catch (err) {
+          console.error("Share failed:", err);
+        }
+      }}
+    >
+      <Text style={{ color: "white", fontWeight: "600" }}>
+        Share
+      </Text>
+    </TouchableOpacity>
+  </View>
+)}
                 </View>
 
                 {/* Expandable Poster & Captions Section */}
