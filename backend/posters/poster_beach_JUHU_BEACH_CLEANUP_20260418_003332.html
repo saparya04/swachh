@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>JUHU BEACH CLEANUP – Beach Cleanup Poster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300;1,400&family=Nunito:wght@300;400;600;700;800&family=Pacifico&display=swap" rel="stylesheet"/>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --white:        #ffffff;
+    --sky:          #e8f6fd;
+    --cyan-bright:  #00c8e8;
+    --cyan:         #18a8c8;
+    --deep-ocean:   #0a3d5c;
+    --turquoise:    #20c0a8;
+    --sand:         #f0dca0;
+    --sand-dark:    #c8a060;
+    --card-w:       520px;
+    --card-h:       740px;
+  }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: #082030;
+    font-family: 'Nunito', sans-serif;
+  }
+
+  .poster {
+    position: relative;
+    width:  var(--card-w);
+    height: var(--card-h);
+    overflow: hidden;
+    border-radius: 20px;
+    box-shadow: 0 40px 100px rgba(0,0,0,.65), 0 0 0 1px rgba(0,200,232,.2);
+    background: linear-gradient(175deg, #1a8fc4 0%, #0d7aad 20%, #0a6090 38%, #2a9db8 52%, #c4a96a 72%, #d4b87a 85%, #e8d09a 100%);
+  }
+
+  /* Deep ocean gradient — stronger at bottom so text pops, very light at top to show sky */
+  .poster::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(to bottom,
+        rgba(8,32,48,.04)   0%,
+        rgba(8,32,48,.08)  35%,
+        rgba(8,32,48,.42)  58%,
+        rgba(6,24,38,.84)  74%,
+        rgba(4,16,28,.97) 100%
+      );
+    z-index: 1;
+  }
+
+  /* Cyan shimmer — top-left where the open sky is in the photo */
+  .poster::after {
+    content: '';
+    position: absolute;
+    top: -30px; left: 10px;
+    width: 260px; height: 260px;
+    background: radial-gradient(circle, rgba(0,200,232,.14) 0%, transparent 65%);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .content {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 40px 44px;
+  }
+
+  /* Top accent — cyan-to-turquoise, like tropical water */
+  .top-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, var(--turquoise), var(--cyan-bright), var(--sand), transparent);
+    opacity: .7;
+  }
+
+  /* Palm leaf decoration */
+  .palm-icon {
+    margin-bottom: 8px;
+    opacity: .85;
+  }
+
+  /* Script headline — Pacifico gives a relaxed tropical vibe */
+  .headline {
+    font-family: 'Pacifico', cursive;
+    font-size: 58px;
+    line-height: 1.05;
+    color: var(--white);
+    text-shadow: 0 3px 28px rgba(4,16,28,.65);
+    margin-bottom: 4px;
+  }
+  .headline span { color: var(--cyan-bright); }
+
+  /* Event name */
+  .event-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 5px;
+    color: var(--cyan-bright);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  /* Divider — double wave lines */
+  .divider {
+    margin-bottom: 15px;
+    opacity: .6;
+  }
+
+  /* Invite */
+  .invite {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 14px;
+    line-height: 1.78;
+    color: rgba(232,246,253,.78);
+    margin-bottom: 20px;
+  }
+  .invite p { margin: 0; }
+
+  /* Details */
+  .details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 20px;
+    margin-bottom: 20px;
+  }
+  .detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .detail-label {
+    font-size: 8.5px;
+    letter-spacing: 2.8px;
+    text-transform: uppercase;
+    color: var(--cyan-bright);
+    opacity: .72;
+  }
+  .detail-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: .2px;
+  }
+
+  /* Volunteers badge — glass morphism ocean blue */
+  .volunteers {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0,200,232,.14);
+    border: 1px solid rgba(0,200,232,.38);
+    border-radius: 10px;
+    padding: 10px 18px;
+    color: var(--cyan-bright);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    backdrop-filter: blur(4px);
+  }
+
+  /* Wave decoration at bottom */
+  .waves-deco {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    opacity: .15;
+    z-index: 1;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+<div class="poster">
+  <div class="top-bar"></div>
+
+  <!-- Layered wave decoration at bottom -->
+  <svg class="waves-deco" viewBox="0 0 520 70" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,35 C70,8 150,62 260,35 C370,8 450,58 520,35 L520,70 L0,70 Z" fill="#00c8e8"/>
+    <path d="M0,48 C90,26 190,68 300,46 C410,24 470,60 520,48 L520,70 L0,70 Z" fill="#20c0a8" opacity=".6"/>
+    <path d="M0,58 C110,42 210,72 330,56 C420,44 480,66 520,58 L520,70 L0,70 Z" fill="#f0dca0" opacity=".4"/>
+  </svg>
+
+  <div class="content">
+    <!-- Palm frond icon -->
+    <div class="palm-icon">
+      <svg width="38" height="30" viewBox="0 0 38 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- trunk -->
+        <path d="M19 30 C18 24, 17 18, 16 10" stroke="#c8a060" stroke-width="2" stroke-linecap="round"/>
+        <!-- left frond -->
+        <path d="M16 10 C10 6, 2 8, 0 4 C4 2, 12 4, 16 10" fill="#20c0a8" opacity=".8"/>
+        <!-- right frond -->
+        <path d="M16 10 C20 4, 30 2, 34 0 C34 4, 24 8, 16 10" fill="#18a8c8" opacity=".75"/>
+        <!-- top frond -->
+        <path d="M16 10 C14 4, 16 0, 20 0 C20 4, 18 8, 16 10" fill="#00c8e8" opacity=".7"/>
+      </svg>
+    </div>
+
+    <div class="headline">Tropical<span>.</span></div>
+    <div class="event-title">JUHU BEACH CLEANUP</div>
+
+    <div class="divider">
+      <svg width="120" height="12" viewBox="0 0 120 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,6 C10,2 20,10 30,6 C40,2 50,10 60,6 C70,2 80,10 90,6 C100,2 110,10 120,6"
+              stroke="#00c8e8" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+
+    <div class="invite"><p>Join us in our mission to create a cleaner, greener,</p><p>and more beautiful beach! We warmly invite you to</p><p>participate in our cleanup drive, where we will unite</p><p>to protect our ocean and coastline.</p></div>
+
+    <div class="details">
+      <div class="detail-item">
+        <span class="detail-label">Date</span>
+        <span class="detail-value">Date TBD</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Time</span>
+        <span class="detail-value">9:00</span>
+      </div>
+      <div class="detail-item" style="grid-column: 1 / -1;">
+        <span class="detail-label">Location</span>
+        <span class="detail-value">Juhu</span>
+      </div>
+    </div>
+
+    <div class="volunteers">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      Volunteers Required: 80
+    </div>
+  </div>
+</div>
+</body>
+</html>

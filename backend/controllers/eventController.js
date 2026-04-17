@@ -255,7 +255,7 @@ exports.generateEventPoster = async (req, res) => {
   }
 
   // ✅ Build URLs
-  const baseUrl = 'http://192.168.0.196:5000';
+  const baseUrl = 'http://192.168.0.195:5000';
 
   const htmlFilename = path.basename(htmlPath);
   const htmlUrl = `${baseUrl}/posters/${htmlFilename}`;

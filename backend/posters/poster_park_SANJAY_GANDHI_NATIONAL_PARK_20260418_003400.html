@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SANJAY GANDHI NATIONAL PARK – Park Cleanup Poster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Josefin+Sans:wght@300;400;600;700&family=Great+Vibes&display=swap" rel="stylesheet"/>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --white:       #ffffff;
+    --cream:       #f5efe0;
+    --sun-gold:    #f0a830;
+    --amber:       #d4762a;
+    --forest:      #1e5228;
+    --deep-forest: #0d2810;
+    --leaf:        #6db86d;
+    --soft-green:  #a8d8a8;
+    --card-w:      520px;
+    --card-h:      740px;
+  }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: #071508;
+    font-family: 'Josefin Sans', sans-serif;
+  }
+
+  .poster {
+    position: relative;
+    width:  var(--card-w);
+    height: var(--card-h);
+    overflow: hidden;
+    border-radius: 20px;
+    box-shadow: 0 40px 100px rgba(0,0,0,.75), 0 0 0 1px rgba(109,184,109,.15);
+    background: radial-gradient(ellipse at 55% 35%, #e8841a 0%, #a85c20 18%, #3a6b30 38%, #1a4020 58%, #0d2810 78%, #071508 100%);
+  }
+
+  /* Vignette — darker at bottom, lighter at sun area (top-center) */
+  .poster::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 52% 38%, transparent 18%, rgba(7,21,8,.35) 55%, rgba(7,21,8,.9) 100%),
+      linear-gradient(to bottom, rgba(7,21,8,.05) 0%, rgba(7,21,8,.12) 40%, rgba(7,21,8,.80) 65%, rgba(7,21,8,.97) 100%);
+    z-index: 1;
+  }
+
+  /* Sun burst glow */
+  .poster::after {
+    content: '';
+    position: absolute;
+    top: 22%; left: 50%;
+    transform: translateX(-50%);
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(240,168,48,.28) 0%, rgba(240,168,48,.08) 45%, transparent 70%);
+    z-index: 1;
+    pointer-events: none;
+    border-radius: 50%;
+  }
+
+  .content {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 40px 44px;
+  }
+
+  /* Top accent — warm amber-to-green like sunlight through leaves */
+  .top-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, var(--amber), var(--sun-gold), var(--leaf), transparent);
+    opacity: .6;
+  }
+
+  /* Leaf decoration */
+  .leaf-icon {
+    margin-bottom: 8px;
+    opacity: .8;
+  }
+
+  /* Script headline */
+  .headline {
+    font-family: 'Great Vibes', cursive;
+    font-size: 72px;
+    line-height: 1;
+    color: var(--white);
+    text-shadow: 0 3px 28px rgba(0,0,0,.6);
+    margin-bottom: 2px;
+  }
+  .headline span { color: var(--sun-gold); }
+
+  /* Event name */
+  .event-title {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: var(--sun-gold);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  /* Nature-themed divider with leaf motif */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .divider-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--soft-green));
+    max-width: 40px;
+    opacity: .55;
+  }
+  .divider-line.right {
+    background: linear-gradient(90deg, var(--soft-green), transparent);
+  }
+
+  /* Invite */
+  .invite {
+    font-family: 'Libre Baskerville', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 13.5px;
+    line-height: 1.78;
+    color: rgba(245,239,224,.72);
+    margin-bottom: 20px;
+  }
+  .invite p { margin: 0; }
+
+  /* Details */
+  .details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 20px;
+    margin-bottom: 20px;
+  }
+  .detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .detail-label {
+    font-size: 8.5px;
+    letter-spacing: 2.8px;
+    text-transform: uppercase;
+    color: var(--soft-green);
+    opacity: .72;
+  }
+  .detail-value {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--white);
+    letter-spacing: .3px;
+  }
+
+  /* Volunteers */
+  .volunteers {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(30,82,40,.28);
+    border: 1px solid rgba(109,184,109,.35);
+    border-radius: 8px;
+    padding: 10px 16px;
+    color: var(--soft-green);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .6px;
+  }
+
+  /* Tree silhouette deco bottom */
+  .trees-deco {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    opacity: .12;
+    z-index: 1;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+<div class="poster">
+  <div class="top-bar"></div>
+
+  <!-- Tree silhouette decoration -->
+  <svg class="trees-deco" viewBox="0 0 520 90" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="0,90 30,30 60,90" fill="#1e5228"/>
+    <polygon points="40,90 80,20 120,90" fill="#1e5228"/>
+    <polygon points="100,90 135,35 170,90" fill="#1e5228"/>
+    <polygon points="160,90 200,15 240,90" fill="#1e5228"/>
+    <polygon points="250,90 280,28 310,90" fill="#1e5228"/>
+    <polygon points="300,90 340,22 380,90" fill="#1e5228"/>
+    <polygon points="370,90 405,32 440,90" fill="#1e5228"/>
+    <polygon points="430,90 465,18 500,90" fill="#1e5228"/>
+    <polygon points="480,90 510,40 540,90" fill="#1e5228"/>
+  </svg>
+
+  <div class="content">
+    <!-- Leaf icon -->
+    <div class="leaf-icon">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 28 C8 20, 4 12, 8 6 C12 0, 24 2, 26 10 C28 18, 22 24, 16 28Z"
+              fill="#6db86d" opacity=".7"/>
+        <line x1="16" y1="28" x2="14" y2="10" stroke="#a8d8a8" stroke-width="1" opacity=".6"/>
+        <line x1="14" y1="18" x2="10" y2="14" stroke="#a8d8a8" stroke-width=".8" opacity=".5"/>
+        <line x1="15" y1="22" x2="20" y2="17" stroke="#a8d8a8" stroke-width=".8" opacity=".5"/>
+      </svg>
+    </div>
+
+    <div class="headline">Nature<span>.</span></div>
+    <div class="event-title">SANJAY GANDHI NATIONAL PARK</div>
+
+    <div class="divider">
+      <div class="divider-line"></div>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="#6db86d" opacity=".7">
+        <path d="M6 11 C3 8, 1 5, 3 2 C4.5 0, 9 1, 10 4 C11 7, 8 9.5, 6 11Z"/>
+      </svg>
+      <div class="divider-line right"></div>
+    </div>
+
+    <div class="invite"><p>Join us in restoring the beauty of our green spaces!</p><p>We warmly invite you to participate in our cleanup</p><p>drive, where we unite to protect our parks, trails,</p><p>and the nature that surrounds us.</p></div>
+
+    <div class="details">
+      <div class="detail-item">
+        <span class="detail-label">Date</span>
+        <span class="detail-value">Date TBD</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Time</span>
+        <span class="detail-value">9:00</span>
+      </div>
+      <div class="detail-item" style="grid-column: 1 / -1;">
+        <span class="detail-label">Location</span>
+        <span class="detail-value">Borivali</span>
+      </div>
+    </div>
+
+    <div class="volunteers">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      Volunteers Required: 10
+    </div>
+  </div>
+</div>
+</body>
+</html>
