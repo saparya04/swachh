@@ -1117,13 +1117,16 @@ const OrganiserDashboard = ({ userData, handleLogout }) => {
         },
       );
 
-      if (res.data.success && res.data.posterUrl) {
+      if (res.data.success && res.data.htmlUrl) {
         // NEW: Save poster URL and captions to state, hidden by default
         setPosterDataMap((prev) => ({
           ...prev,
           [eventId]: {
-            url: res.data.posterUrl,
-            captions: res.data.captions, // Ensure your backend sends this object
+            // url: res.data.posterUrl,
+            // captions: res.data.captions, // Ensure your backend sends this object
+            // isVisible: false,
+            htmlUrl: res.data.htmlUrl,
+            pngUrl: res.data.pngUrl,
             isVisible: false,
           },
         }));
@@ -1259,7 +1262,7 @@ const OrganiserDashboard = ({ userData, handleLogout }) => {
                   <TouchableOpacity
                     style={{
                       backgroundColor: "#FF6B35",
-                      paddingHorizontal:6,
+                      paddingHorizontal: 6,
                       paddingVertical: 6,
                       borderRadius: 6,
                       marginBottom: 8,
@@ -1383,70 +1386,98 @@ const OrganiserDashboard = ({ userData, handleLogout }) => {
                     </TouchableOpacity>
                   )} */}
                   {/* View + Share Row */}
-{hasPosterData && (
-  <View
-    style={{
-      flexDirection: "row",   // ✅ makes them side by side
-      gap: 6,
-      marginTop: 8,
-      width: "100%",
-    }}
-  >
-    {/* View Poster */}
-    <TouchableOpacity
-      style={{
-        backgroundColor: "#2A9D8F",
-        paddingVertical: 6,
-        borderRadius: 6,
-        flex: 1,
-        alignItems: "center",
-      }}
-      onPress={() => {
-        const url = posterDataMap[ev._id].url;
-        window.open(url, "_blank");
-      }}
-    >
-      <Text style={{ color: "white", fontSize: 13, fontWeight: "600" }}>
-        View
-      </Text>
-    </TouchableOpacity>
+                  {hasPosterData && (
+                    <View
+                      style={{
+                        flexDirection: "row", // ✅ makes them side by side
+                        gap: 6,
+                        marginTop: 8,
+                        width: "100%",
+                      }}
+                    >
+                      {/* View Poster */}
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: "#2A9D8F",
+                          paddingVertical: 6,
+                          borderRadius: 6,
+                          flex: 1,
+                          alignItems: "center",
+                        }}
+                        // onPress={() => {
+                        //   const url = posterDataMap[ev._id].url;
+                        //   window.open(url, "_blank");
+                        // }}
+                        onPress={() => {
+                          // window.open(posterDataMap[ev._id].htmlUrl, "_blank");            //newwwwwwww
+                          const url = posterDataMap[ev._id].htmlUrl; // ✅ HTML here
+                          window.open(url, "_blank");
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: "white",
+                            fontSize: 13,
+                            fontWeight: "600",
+                          }}
+                        >
+                          View
+                        </Text>
+                      </TouchableOpacity>
 
-    {/* Share Button */}
-    <TouchableOpacity
-      style={{
-        backgroundColor: "#6C5CE7",
-        paddingVertical: 6,
-        borderRadius: 6,
-        flex: 1,
-        alignItems: "center",
-      }}
-      onPress={async () => {
-        const url = posterDataMap[ev._id].url;
+                      {/* Share Button */}
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: "#6C5CE7",
+                          paddingVertical: 6,
+                          borderRadius: 6,
+                          flex: 1,
+                          alignItems: "center",
+                        }}
+                        // onPress={async () => {
+                        //   const url = posterDataMap[ev._id].url;
 
-        try {
-          if (navigator.share) {
-            await navigator.share({
-              title: "Join our Cleanup Drive 🌱",
-              text: "Check out this event!",
-              url: url,
-            });
-          } else {
-            window.open(
-              `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
-              "_blank"
-            );
-          }
-        } catch (err) {
-          console.error("Share failed:", err);
-        }
-      }}
-    >
-      <Text style={{ color: "white", fontWeight: "600" }}>
-        Share
-      </Text>
-    </TouchableOpacity>
-  </View>
-)}
+                        //   try {
+                        //     if (navigator.share) {
+                        //       await navigator.share({
+                        //         title: "Join our Cleanup Drive 🌱",
+                        //         text: "Check out this event!",
+                        //         url: url,
+                        //       });
+                        //     } else {
+                        //       window.open(
+                        //         `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
+                        //         "_blank"
+                        //       );
+                        //     }
+                        //   } catch (err) {
+                        //     console.error("Share failed:", err);
+                        //   }
+                        // }}
+                        onPress={async () => {
+                          const url = posterDataMap[ev._id].pngUrl;
+
+                          try {
+                            if (navigator.share && url) {
+                              await navigator.share({
+                                title: "Join our Cleanup Drive 🌱",
+                                text: "Check out this event!",
+                                url: url,
+                              });
+                            } else {
+                              window.open(url, "_blank");
+                            }
+                          } catch (err) {
+                            console.error("Share failed:", err);
+                          }
+                        }}
+                      >
+                        <Text style={{ color: "white", fontWeight: "600" }}>
+                          Share
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </View>
 
                 {/* Expandable Poster & Captions Section */}

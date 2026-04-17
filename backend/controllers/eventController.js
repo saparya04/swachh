@@ -163,52 +163,120 @@ exports.generateEventPoster = async (req, res) => {
       });
     });
 
+    // python.on('close', (code) => {
+    //   console.log(`[generateEventPoster] Python exited with code ${code}`);
+
+    //   if (code !== 0) {
+    //     return res.status(500).json({
+    //       success: false,
+    //       message: 'Python script failed',
+    //       pythonError: stderr.slice(0, 500) || 'No error output'
+    //     });
+    //   }
+
+    //   // Find POSTER_PATH line
+    //   // const posterPathMatch = stdout.match(/POSTER_PATH:(.+)/);
+    //   const match = stdout.match(/POSTER_OUTPUT:(\{.*\})/);
+
+    //   let htmlPath = null;
+    //   let pngPath = null;
+
+    //   if (match) {
+    //     const parsed = JSON.parse(match[1]);
+    //     htmlPath = parsed.html;
+    //     pngPath = parsed.png;
+    //   }
+
+    //   const posterPath = posterPathMatch ? posterPathMatch[1].trim() : null;
+
+    //   if (!posterPath || !fs.existsSync(posterPath)) {
+    //     return res.status(500).json({
+    //       success: false,
+    //       message: 'Poster file not created'
+    //     });
+    //   }
+
+    //   // const filename = path.basename(posterPath);
+    //   // const baseUrl = process.env.BASE_URL || 'http://192.168.0.195:5000';
+    //   // const posterUrl = `${baseUrl}/SwachhMitra/backend/posters/${filename}`;
+
+    //   // console.log(`[generateEventPoster] Success - URL: ${posterUrl}`);
+
+      
+    //   // 1. Get just the filename (e.g., "poster_BEACH_CLEAN_UP_20260220_143733.png")
+    //   const filename = path.basename(posterPath);
+      
+    //   // 2. Build the clean URL that matches server.js
+    //   //const baseUrl = 'http://192.168.0.195:5000'; 
+    //   const baseUrl = 'http://192.168.0.196:5000';        //chnage url for poster on ui
+    //   const posterUrl = `${baseUrl}/posters/${filename}`;
+    //   console.log(posterUrl); 
+
+    //   console.log(`[generateEventPoster] Success - Clean URL: ${posterUrl}`);
+
+    //   res.json({
+    //     success: true,
+    //     posterUrl:posterUrl,
+    //     eventName: event.name
+    //   });
+    // });
+    //NNEWWWWWWWWWWWWWWWWWWW
     python.on('close', (code) => {
-      console.log(`[generateEventPoster] Python exited with code ${code}`);
+  console.log(`[generateEventPoster] Python exited with code ${code}`);
 
-      if (code !== 0) {
-        return res.status(500).json({
-          success: false,
-          message: 'Python script failed',
-          pythonError: stderr.slice(0, 500) || 'No error output'
-        });
-      }
-
-      // Find POSTER_PATH line
-      const posterPathMatch = stdout.match(/POSTER_PATH:(.+)/);
-      const posterPath = posterPathMatch ? posterPathMatch[1].trim() : null;
-
-      if (!posterPath || !fs.existsSync(posterPath)) {
-        return res.status(500).json({
-          success: false,
-          message: 'Poster file not created'
-        });
-      }
-
-      // const filename = path.basename(posterPath);
-      // const baseUrl = process.env.BASE_URL || 'http://192.168.0.195:5000';
-      // const posterUrl = `${baseUrl}/SwachhMitra/backend/posters/${filename}`;
-
-      // console.log(`[generateEventPoster] Success - URL: ${posterUrl}`);
-
-      
-      // 1. Get just the filename (e.g., "poster_BEACH_CLEAN_UP_20260220_143733.png")
-      const filename = path.basename(posterPath);
-      
-      // 2. Build the clean URL that matches server.js
-      //const baseUrl = 'http://192.168.0.195:5000'; 
-      const baseUrl = 'http://192.168.0.196:5000';        //chnage url for poster on ui
-      const posterUrl = `${baseUrl}/posters/${filename}`;
-      console.log(posterUrl); 
-
-      console.log(`[generateEventPoster] Success - Clean URL: ${posterUrl}`);
-
-      res.json({
-        success: true,
-        posterUrl:posterUrl,
-        eventName: event.name
-      });
+  if (code !== 0) {
+    return res.status(500).json({
+      success: false,
+      message: 'Python script failed',
+      pythonError: stderr.slice(0, 500) || 'No error output'
     });
+  }
+
+  const fs = require('fs');
+
+  // ✅ Read BOTH HTML + PNG from Python
+  const match = stdout.match(/POSTER_OUTPUT:(\{.*\})/);
+
+  let htmlPath = null;
+  let pngPath = null;
+
+  if (match) {
+    const parsed = JSON.parse(match[1]);
+    htmlPath = parsed.html;
+    pngPath = parsed.png;
+  }
+
+  // ❌ If HTML missing → fail
+  if (!htmlPath || !fs.existsSync(htmlPath)) {
+    return res.status(500).json({
+      success: false,
+      message: 'HTML poster not created'
+    });
+  }
+
+  // ✅ Build URLs
+  const baseUrl = 'http://192.168.0.196:5000';
+
+  const htmlFilename = path.basename(htmlPath);
+  const htmlUrl = `${baseUrl}/posters/${htmlFilename}`;
+
+  let pngUrl = null;
+  if (pngPath && fs.existsSync(pngPath)) {
+    const pngFilename = path.basename(pngPath);
+    pngUrl = `${baseUrl}/posters/${pngFilename}`;
+  }
+
+  console.log("HTML URL:", htmlUrl);
+  console.log("PNG URL:", pngUrl);
+
+  // ✅ FINAL RESPONSE
+  res.json({
+    success: true,
+    htmlUrl,
+    pngUrl,
+    eventName: event.name
+  });
+});
   } catch (err) {
     console.error(`[generateEventPoster] Crash:`, err.stack);
     res.status(500).json({
