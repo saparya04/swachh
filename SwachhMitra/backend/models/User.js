@@ -82,6 +82,18 @@ const UserSchema = new mongoose.Schema({
   isDark:       { type: Boolean, default: false },
   notifications:{ type: Boolean, default: true },
 
+  // ── Rewards bonuses (volunteer) ────────────────────────────────────────────
+  rewardsGeofenceBonusDayIST: { type: String, default: '' },
+  finalAiBagBonusEligible:     { type: Boolean, default: false },
+
+  // ── Final AI bag classifier (impact report) ────────────────────────────────
+  finalAiBagSamples: [{
+    bagPercent: { type: Number },
+    recordedAt: { type: Date, default: Date.now },
+  }],
+  /** Each logged Final AI reading counts as one item → CO₂ = count × 0.02 t */
+  finalAiItemCount: { type: Number, default: 0 },
+
   createdAt:    { type: Date, default: Date.now },
 });
 

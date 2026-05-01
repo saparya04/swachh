@@ -241,15 +241,59 @@ exports.rateEvent = async (req, res) => {
   }
 };
 
+function eventDurationHours(ev) {
+  const win = getGeofenceWindow(ev);
+  const start = win.start;
+  const end = win.end;
+  if (!start || !end || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 0;
+  let ms = end.getTime() - start.getTime();
+  if (ms < 0) ms += 86400000;
+  return ms / 3600000;
+}
+
 // ── Volunteer's impact report ─────────────────────────────────────────────────
 exports.getVolunteerReport = async (req, res) => {
   try {
     const { firebaseUid } = req.params;
     const user = await User.findOne({ firebaseUid })
-      .select('name xp level totalEventsJoined totalScans totalKgCollected totalHoursVolunteered co2SavedTons monthlyActivity certProgress badges streak');
+      .select('name xp level totalEventsJoined totalScans totalKgCollected totalHoursVolunteered co2SavedTons monthlyActivity certProgress badges streak finalAiBagSamples finalAiItemCount');
     if (!user) return res.status(404).json({ message: 'User not found.' });
 
-    res.status(200).json(user);
+    const eventsJoinedCount = await Event.countDocuments({ participants: firebaseUid });
+
+    const now = new Date();
+    const joinedEvents = await Event.find({ participants: firebaseUid });
+    let volunteerHoursPastEvents = 0;
+    for (const ev of joinedEvents) {
+      const win = getGeofenceWindow(ev);
+      if (!win.end || win.end >= now) continue;
+      volunteerHoursPastEvents += eventDurationHours(ev);
+    }
+
+    const samples = user.finalAiBagSamples || [];
+    let finalAiAvgBagPercent = 0;
+    if (samples.length > 0) {
+      finalAiAvgBagPercent =
+        samples.reduce((s, x) => s + (Number(x.bagPercent) || 0), 0) / samples.length;
+    }
+    const last = samples.length ? samples[samples.length - 1] : null;
+    const finalAiLatestBagPercent = last ? Number(last.bagPercent) || 0 : 0;
+    const finalAiItemCount = user.finalAiItemCount || 0;
+    const CO2_PER_ITEM_TONS = 0.02;
+    const co2SavedFromFinalAiTons = finalAiItemCount * CO2_PER_ITEM_TONS;
+
+    const payload = user.toObject();
+    delete payload.finalAiBagSamples;
+
+    payload.eventsJoinedCount = eventsJoinedCount;
+    payload.volunteerHoursPastEvents = Math.round(volunteerHoursPastEvents * 10) / 10;
+    payload.finalAiAvgBagPercent = Math.round(finalAiAvgBagPercent * 10) / 10;
+    payload.finalAiLatestBagPercent = Math.round(finalAiLatestBagPercent * 10) / 10;
+    payload.finalAiSampleCount = samples.length;
+    payload.finalAiItemCount = finalAiItemCount;
+    payload.co2SavedFromFinalAiTons = Math.round(co2SavedFromFinalAiTons * 100) / 100;
+
+    res.status(200).json(payload);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

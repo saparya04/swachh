@@ -18,6 +18,10 @@ router.get('/cert-progress/:firebaseUid', ctrl.getCertProgress);
 // Waste scan logging
 router.post('/log-scan', ctrl.logScan);
 
+// Rewards bonuses (cleanup zone + Final AI bag)
+router.post('/report-final-ai-bag', ctrl.reportFinalAiBag);
+router.post('/claim-rewards-bonuses', ctrl.claimRewardsBonuses);
+
 // Settings
 router.post('/update-settings', ctrl.updateUserSettings);
 

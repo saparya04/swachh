@@ -3,6 +3,8 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator,
   Alert, ScrollView, Platform, Image, Dimensions, Animated, Modal, StatusBar
 } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { initializeApp } from 'firebase/app';
 import {
   createUserWithEmailAndPassword, signInWithEmailAndPassword,
@@ -18,7 +20,7 @@ import { Picker } from '@react-native-picker/picker';
 import LeafletPolygonPicker from './components/LeafletPolygonPicker';
 import io from 'socket.io-client';
 
-const socket = io('http://192.168.1.9:5000', { transports: ['websocket'], autoConnect: true });
+const socket = io('http://172.20.10.5:5000', { transports: ['websocket'], autoConnect: true });
 
 const firebaseConfig = {
   apiKey: "AIzaSyCTL_q0pfcj0Ut0_20MnR8GThLi9kc5U-E",
@@ -30,9 +32,9 @@ const firebaseConfig = {
   measurementId: "G-2VPF0FER2N"
 };
 
-const BACKEND_URL = 'http://192.168.1.9:5000';
-const BASE_URL    = 'http://192.168.1.9:5000/api';
-const FLASK_URL   = 'http://192.168.1.9:5001';
+const BACKEND_URL = 'http://172.20.10.5:5000';
+const BASE_URL    = 'http://172.20.10.5:5000/api';
+const FLASK_URL   = 'http://172.20.10.5:5001';
 
 const app = initializeApp(firebaseConfig);
 const getPersistenceMethod = () =>
@@ -100,7 +102,7 @@ const GreenHeader = ({ title, subtitle, onBack, rightAction, bgColor }) => (
     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
       {onBack
         ? <TouchableOpacity onPress={onBack} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' }}>
-            <Text style={{ color: T.white, fontSize: 18 }}>←</Text>
+            <Ionicons name="chevron-back" size={22} color={T.white} />
           </TouchableOpacity>
         : <View style={{ width: 36 }} />}
       <Text style={{ color: T.white, fontSize: 17, fontWeight: '700' }}>{title}</Text>
@@ -124,19 +126,19 @@ const StyledInput = ({ label, ...props }) => {
 
 const TabBar = ({ activeTab, setActiveTab, tabs }) => {
   const cfg = {
-    Home: { emoji: '🏠', label: 'Home' }, Events: { emoji: '🗓️', label: 'Events' },
-    Classify: { emoji: '📸', label: 'Scan' }, Rewards: { emoji: '🏆', label: 'Rewards' },
-    Messages: { emoji: '💬', label: 'Chat' }, Reports: { emoji: '📈', label: 'Reports' },
-    Settings: { emoji: '⚙️', label: 'Profile' }, Analytics: { emoji: '📊', label: 'Analytics' },
+    Home: { icon: 'home', label: 'Home' }, Events: { icon: 'calendar', label: 'Events' },
+    Classify: { icon: 'camera', label: 'Scan' }, Rewards: { icon: 'trophy', label: 'Rewards' },
+    Messages: { icon: 'chatbubbles', label: 'Chat' }, Reports: { icon: 'bar-chart', label: 'Reports' },
+    Settings: { icon: 'settings', label: 'Profile' }, Analytics: { icon: 'pie-chart', label: 'Analytics' },
   };
   return (
     <View style={S.tabBar}>
       {tabs.map(tab => {
-        const c = cfg[tab] || { emoji: '•', label: tab };
+        const c = cfg[tab] || { icon: 'ellipse', label: tab };
         const active = activeTab === tab;
         return (
           <TouchableOpacity key={tab} style={S.tabItem} onPress={() => setActiveTab(tab)}>
-            <Text style={{ fontSize: 22, opacity: active ? 1 : 0.4 }}>{c.emoji}</Text>
+            <Ionicons name={c.icon} size={22} color={active ? T.primary : T.muted} style={{ opacity: active ? 1 : 0.45 }} />
             <Text style={{ fontSize: 10, fontWeight: active ? '700' : '500', color: active ? T.primary : T.muted, marginTop: 2 }}>{c.label}</Text>
             {active && <View style={S.tabDot} />}
           </TouchableOpacity>
@@ -146,13 +148,31 @@ const TabBar = ({ activeTab, setActiveTab, tabs }) => {
   );
 };
 
-const StatBox = ({ emoji, value, label }) => (
+const StatBox = ({ ionicon, mdIcon, iconColor = T.primary, value, label }) => (
   <View style={S.statBox}>
-    <Text style={{ fontSize: 24, marginBottom: 4 }}>{emoji}</Text>
+    {mdIcon ? (
+      <MaterialCommunityIcons name={mdIcon} size={24} color={iconColor} style={{ marginBottom: 4 }} />
+    ) : (
+      <Ionicons name={ionicon || 'ellipse'} size={24} color={iconColor} style={{ marginBottom: 4 }} />
+    )}
     <Text style={{ fontSize: 22, fontWeight: '800', color: T.dark }}>{value}</Text>
     <Text style={[S.caption, { textAlign: 'center' }]}>{label}</Text>
   </View>
 );
+
+function RoleAvatarIcon({ role, size = 28, color = T.dark }) {
+  if (role === 'csr') return <MaterialCommunityIcons name="office-building-outline" size={size} color={color} />;
+  if (role === 'organiser') return <MaterialCommunityIcons name="calendar-check" size={size} color={color} />;
+  if (role === 'volunteer') return <Ionicons name="leaf-outline" size={size} color={color} />;
+  return <Ionicons name="person-outline" size={size} color={color} />;
+}
+
+function RankMedalIcon({ rank, size = 22 }) {
+  if (rank === 1) return <MaterialCommunityIcons name="trophy" size={size} color="#FFB300" />;
+  if (rank === 2) return <MaterialCommunityIcons name="medal" size={size} color="#90A4AE" />;
+  if (rank === 3) return <MaterialCommunityIcons name="medal" size={size} color="#CD7F32" />;
+  return null;
+}
 
 const XPBar = ({ xp = 0, level = 1 }) => {
   const maxXp = level * 500;
@@ -182,9 +202,9 @@ const WelcomeScreen = ({ setRole, setIsRegistering, setIsLoggedIn }) => {
     ]).start();
   }, []);
   const roles = [
-    { key: 'volunteer', emoji: '🌿', label: 'Volunteer',   desc: 'Join cleanup drives & earn rewards' },
-    { key: 'organiser', emoji: '📋', label: 'Organiser',   desc: 'Create and manage events' },
-    { key: 'csr',       emoji: '🏢', label: 'CSR Partner', desc: 'Fund and track your green impact' },
+    { key: 'volunteer', icon: 'leaf', lib: 'ion', label: 'Volunteer',   desc: 'Join cleanup drives & earn rewards' },
+    { key: 'organiser', icon: 'calendar-check', lib: 'md', label: 'Organiser',   desc: 'Create and manage events' },
+    { key: 'csr',       icon: 'office-building', lib: 'md', label: 'CSR Partner', desc: 'Fund and track your green impact' },
   ];
   return (
     <View style={{ flex: 1, backgroundColor: T.primary }}>
@@ -195,7 +215,7 @@ const WelcomeScreen = ({ setRole, setIsRegistering, setIsLoggedIn }) => {
         <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
           <View style={{ alignItems: 'center', paddingTop: 90, paddingBottom: 50 }}>
             <View style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center', marginBottom: 24 }}>
-              <Text style={{ fontSize: 48 }}>🌱</Text>
+              <MaterialCommunityIcons name="sprout" size={52} color={T.white} />
             </View>
             <Text style={{ fontSize: 38, fontWeight: '800', color: T.white, letterSpacing: -0.5, textAlign: 'center', lineHeight: 46 }}>Swachh{'\n'}Mitra</Text>
             <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 15, marginTop: 10 }}>Clean Together · Impact Forever</Text>
@@ -205,7 +225,9 @@ const WelcomeScreen = ({ setRole, setIsRegistering, setIsLoggedIn }) => {
             <TouchableOpacity key={r.key} onPress={() => { setRole(r.key); setIsRegistering(); }}
               style={{ backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', borderRadius: 18, padding: 18, marginBottom: 12, flexDirection: 'row', alignItems: 'center' }}>
               <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center', marginRight: 16 }}>
-                <Text style={{ fontSize: 26 }}>{r.emoji}</Text>
+                {r.lib === 'md'
+                  ? <MaterialCommunityIcons name={r.icon} size={28} color={T.white} />
+                  : <Ionicons name={r.icon} size={28} color={T.white} />}
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ color: T.white, fontSize: 16, fontWeight: '700' }}>{r.label}</Text>
@@ -232,7 +254,6 @@ const RegisterScreen = ({ role, setScreen, setRole, setUserData }) => {
   const [location, setLocation] = useState('');
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState(null);
-  const roleEmoji = { volunteer: '🌿', organiser: '📋', csr: '🏢' };
   const roleColor = { volunteer: T.primary, organiser: T.accent, csr: '#4527A0' };
 
   const handleRegister = async () => {
@@ -256,7 +277,9 @@ const RegisterScreen = ({ role, setScreen, setRole, setUserData }) => {
       <GreenHeader title={`Join as ${role?.toUpperCase()}`} onBack={() => { setScreen('welcome'); setRole(null); }} />
       <ScrollView contentContainerStyle={{ padding: 24 }} keyboardShouldPersistTaps="handled">
         <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: T.card, borderRadius: 16, padding: 16, marginBottom: 24, shadowColor: T.dark, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, elevation: 3 }}>
-          <Text style={{ fontSize: 36, marginRight: 14 }}>{roleEmoji[role] || '👤'}</Text>
+          <View style={{ marginRight: 14 }}>
+            <RoleAvatarIcon role={role} size={36} color={roleColor[role] || T.primary} />
+          </View>
           <View>
             <Text style={S.label}>Registering as</Text>
             <Text style={{ fontSize: 20, fontWeight: '800', color: roleColor[role] || T.primary }}>
@@ -265,8 +288,9 @@ const RegisterScreen = ({ role, setScreen, setRole, setUserData }) => {
           </View>
         </View>
         {error && (
-          <View style={{ backgroundColor: T.dangerLight, borderRadius: 12, padding: 14, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: T.danger }}>
-            <Text style={{ color: T.danger, fontWeight: '600', fontSize: 13 }}>⚠️  {error}</Text>
+          <View style={{ backgroundColor: T.dangerLight, borderRadius: 12, padding: 14, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: T.danger, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Ionicons name="warning-outline" size={20} color={T.danger} />
+            <Text style={{ color: T.danger, fontWeight: '600', fontSize: 13, flex: 1 }}>{error}</Text>
           </View>
         )}
         <StyledInput label="Full Name"       placeholder="Your full name"            value={name}     onChangeText={setName}     autoCapitalize="words" />
@@ -308,14 +332,15 @@ const LoginScreen = ({ setScreen, setUserData }) => {
       <ScrollView contentContainerStyle={{ padding: 24 }} keyboardShouldPersistTaps="handled">
         <View style={{ alignItems: 'center', marginVertical: 32 }}>
           <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: T.primary, justifyContent: 'center', alignItems: 'center', shadowColor: T.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, elevation: 10 }}>
-            <Text style={{ fontSize: 38 }}>🌱</Text>
+            <MaterialCommunityIcons name="sprout" size={42} color={T.white} />
           </View>
           <Text style={[S.h2, { marginTop: 14 }]}>Log in to SwachhMitra</Text>
           <Text style={[S.body, { marginTop: 4 }]}>Continue your eco-impact journey</Text>
         </View>
         {error && (
-          <View style={{ backgroundColor: T.dangerLight, borderRadius: 12, padding: 14, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: T.danger }}>
-            <Text style={{ color: T.danger, fontWeight: '600', fontSize: 13 }}>⚠️  {error}</Text>
+          <View style={{ backgroundColor: T.dangerLight, borderRadius: 12, padding: 14, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: T.danger, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Ionicons name="warning-outline" size={20} color={T.danger} />
+            <Text style={{ color: T.danger, fontWeight: '600', fontSize: 13, flex: 1 }}>{error}</Text>
           </View>
         )}
         <StyledInput label="Email Address" placeholder="you@email.com"  value={email}    onChangeText={setEmail}    keyboardType="email-address" autoCapitalize="none" />
@@ -333,6 +358,31 @@ const LoginScreen = ({ setScreen, setUserData }) => {
 
 // ── CLASSIFY ──────────────────────────────────────────────────────────────────
 
+/** Scan HF Gradio page text for a percentage (1–100); first match per session is posted. */
+const FINAL_AI_BAG_WEB_SCRIPT = `
+(function(){
+  var posted = false;
+  function check() {
+    if (posted || !window.ReactNativeWebView) return;
+    try {
+      var text = document.body && document.body.innerText || '';
+      var re = /(\\d+(?:\\.\\d+)?)\\s*%/g;
+      var m;
+      while ((m = re.exec(text)) !== null) {
+        var v = parseFloat(m[1]);
+        if (v >= 1 && v <= 100) {
+          posted = true;
+          window.ReactNativeWebView.postMessage(JSON.stringify({ bagPercent: v }));
+          return;
+        }
+      }
+    } catch (e) {}
+  }
+  setInterval(check, 3000);
+})();
+true;
+`;
+
 const ClassifyScreen = ({ userData }) => {
   const [permission, requestPermission] = useCameraPermissions();
   const [showLiveFeed, setShowLiveFeed] = useState(false);
@@ -341,6 +391,7 @@ const ClassifyScreen = ({ userData }) => {
   const [showFinalModal, setShowFinalModal] = useState(false);
   const [scanning, setScanning] = useState(false);
   const cameraRef = useRef(null);
+  const bagBonusPostedRef = useRef(false);
   const catColors = { 'Dry': '#0288D1', 'Wet': '#388E3C', 'Hazardous': '#D32F2F', 'E-Waste': '#7B1FA2' };
 
   const runDetection = async () => {
@@ -373,6 +424,23 @@ const ClassifyScreen = ({ userData }) => {
     return () => clearInterval(interval);
   }, [showLiveFeed]);
 
+  useEffect(() => {
+    if (!showFinalModal) bagBonusPostedRef.current = false;
+  }, [showFinalModal]);
+
+  const onFinalAiWebMessage = (e) => {
+    try {
+      const data = JSON.parse(e.nativeEvent.data);
+      const pct = Number(data.bagPercent);
+      if (!Number.isFinite(pct) || pct < 1 || pct > 100 || !userData?.firebaseUid || bagBonusPostedRef.current) return;
+      bagBonusPostedRef.current = true;
+      axios.post(`${BASE_URL}/users/report-final-ai-bag`, {
+        firebaseUid: userData.firebaseUid,
+        bagPercent: pct,
+      }).catch(() => {});
+    } catch {}
+  };
+
   if (!permission?.granted) {
     return (
       <View style={{ flex: 1, backgroundColor: T.bg }}>
@@ -398,7 +466,7 @@ const ClassifyScreen = ({ userData }) => {
                 ? <Image source={{ uri: processedImage }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
                 : <CameraView ref={cameraRef} style={{ flex: 1 }} facing="back" />)
             : <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#111' }}>
-                <Text style={{ fontSize: 64 }}>🔍</Text>
+                <Ionicons name="scan-outline" size={64} color="rgba(255,255,255,0.35)" />
                 <Text style={{ color: 'rgba(255,255,255,0.5)', marginTop: 12, fontSize: 14 }}>Camera off</Text>
               </View>}
           {scanning && (
@@ -416,7 +484,7 @@ const ClassifyScreen = ({ userData }) => {
             {wasteData.type ? (
               <View style={{ marginTop: 12, backgroundColor: T.bg, borderRadius: 12, padding: 12 }}>
                 <Text style={{ color: T.mid, fontSize: 13 }}>
-                  💡 {wasteData.type === 'Dry' ? 'Blue bin — Recyclable.' : wasteData.type === 'Wet' ? 'Green bin — Biodegradable.' : wasteData.type === 'Hazardous' ? 'Take to hazardous waste center.' : 'Certified e-waste center.'}
+                  {wasteData.type === 'Dry' ? 'Blue bin — Recyclable.' : wasteData.type === 'Wet' ? 'Green bin — Biodegradable.' : wasteData.type === 'Hazardous' ? 'Take to hazardous waste center.' : 'Certified e-waste center.'}
                 </Text>
                 <Text style={{ color: T.primary, fontWeight: '700', fontSize: 12, marginTop: 6 }}>+2 XP awarded!</Text>
               </View>
@@ -424,7 +492,10 @@ const ClassifyScreen = ({ userData }) => {
           </View>
         )}
         <TouchableOpacity style={showLiveFeed ? S.btnDanger : S.btnPrimary} onPress={() => setShowLiveFeed(!showLiveFeed)}>
-          <Text style={S.btnText}>{showLiveFeed ? '⏹  Stop Camera' : '📸  Start Primary Scan'}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <Ionicons name={showLiveFeed ? 'stop-circle' : 'camera'} size={18} color={T.white} />
+            <Text style={S.btnText}>{showLiveFeed ? 'Stop Camera' : 'Start Primary Scan'}</Text>
+          </View>
         </TouchableOpacity>
         {!showLiveFeed && (
           <>
@@ -434,19 +505,28 @@ const ClassifyScreen = ({ userData }) => {
               <View style={{ flex: 1, height: 1, backgroundColor: T.border }} />
             </View>
             <TouchableOpacity style={S.btnAccent} onPress={() => setShowFinalModal(true)}>
-              <Text style={S.btnText}>🤖  Final AI Classification</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <MaterialCommunityIcons name="robot-outline" size={18} color={T.white} />
+                <Text style={S.btnText}>Final AI Classification</Text>
+              </View>
             </TouchableOpacity>
             <Text style={[S.caption, { textAlign: 'center', marginTop: 10 }]}>Uses Hugging Face model for high accuracy</Text>
             <View style={{ marginTop: 24 }}>
               <Text style={[S.h3, { marginBottom: 14 }]}>Waste Category Guide</Text>
               {[
-                { color: '#0288D1', emoji: '♻️', name: 'Dry Waste',  desc: 'Paper, plastic, metal, glass' },
-                { color: '#388E3C', emoji: '🍃', name: 'Wet Waste',  desc: 'Food scraps, leaves, organic' },
-                { color: '#D32F2F', emoji: '⚠️', name: 'Hazardous', desc: 'Batteries, chemicals, paint' },
-                { color: '#7B1FA2', emoji: '💻', name: 'E-Waste',   desc: 'Electronics, cables, bulbs' },
+                { color: '#0288D1', mdIcon: 'recycle', name: 'Dry Waste',  desc: 'Paper, plastic, metal, glass' },
+                { color: '#388E3C', ionicon: 'leaf-outline', name: 'Wet Waste',  desc: 'Food scraps, leaves, organic' },
+                { color: '#D32F2F', ionicon: 'warning-outline', name: 'Hazardous', desc: 'Batteries, chemicals, paint' },
+                { color: '#7B1FA2', ionicon: 'hardware-chip-outline', name: 'E-Waste',   desc: 'Electronics, cables, bulbs' },
               ].map(c => (
                 <View key={c.name} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: T.card, borderRadius: 14, padding: 14, marginBottom: 10, borderLeftWidth: 4, borderLeftColor: c.color }}>
-                  <Text style={{ fontSize: 24, marginRight: 14 }}>{c.emoji}</Text>
+                  <View style={{ width: 36, alignItems: 'center', marginRight: 10 }}>
+                    {c.mdIcon ? (
+                      <MaterialCommunityIcons name={c.mdIcon} size={26} color={c.color} />
+                    ) : (
+                      <Ionicons name={c.ionicon} size={26} color={c.color} />
+                    )}
+                  </View>
                   <View><Text style={{ fontWeight: '700', color: T.dark, fontSize: 14 }}>{c.name}</Text><Text style={S.caption}>{c.desc}</Text></View>
                 </View>
               ))}
@@ -457,13 +537,23 @@ const ClassifyScreen = ({ userData }) => {
       <Modal visible={showFinalModal} animationType="slide" onRequestClose={() => setShowFinalModal(false)}>
         <View style={{ flex: 1 }}>
           <View style={{ paddingTop: Platform.OS === 'ios' ? 54 : 30, paddingBottom: 16, paddingHorizontal: 20, backgroundColor: T.primary, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={{ color: T.white, fontSize: 17, fontWeight: '700' }}>🤖 Final Waste Check</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <MaterialCommunityIcons name="robot-outline" size={22} color={T.white} />
+              <Text style={{ color: T.white, fontSize: 17, fontWeight: '700' }}>Final Waste Check</Text>
+            </View>
             <TouchableOpacity onPress={() => setShowFinalModal(false)} style={{ backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20 }}>
               <Text style={{ color: T.white, fontWeight: '700' }}>Close</Text>
             </TouchableOpacity>
           </View>
-          <WebView source={{ uri: 'https://huggingface.co/spaces/vanshkadam/waste-bag-classifier' }} style={{ flex: 1 }}
-            startInLoadingState renderLoading={() => <View style={S.fullCenter}><ActivityIndicator size="large" color={T.primary} /></View>} />
+          <WebView
+            source={{ uri: 'https://huggingface.co/spaces/vanshkadam/waste-bag-classifier' }}
+            style={{ flex: 1 }}
+            startInLoadingState
+            renderLoading={() => <View style={S.fullCenter}><ActivityIndicator size="large" color={T.primary} /></View>}
+            injectedJavaScript={FINAL_AI_BAG_WEB_SCRIPT}
+            onMessage={onFinalAiWebMessage}
+            originWhitelist={['*']}
+          />
         </View>
       </Modal>
     </View>
@@ -472,13 +562,12 @@ const ClassifyScreen = ({ userData }) => {
 
 // ── REWARDS ───────────────────────────────────────────────────────────────────
 
-const RewardsScreen = ({ userData }) => {
+const RewardsScreen = ({ userData, setUserData }) => {
   const [section, setSection]         = useState('leaderboard');
   const [leaderboard, setLeaderboard] = useState([]);
   const [certs, setCerts]             = useState([]);
   const [myRank, setMyRank]           = useState(null);
   const [loading, setLoading]         = useState(true);
-  const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
   useEffect(() => {
     const loadData = async () => {
@@ -493,12 +582,12 @@ const RewardsScreen = ({ userData }) => {
 
         // Merge API cert progress with display metadata
         const CERT_META = [
-          { certId: 'eco_warrior',        title: 'Eco Warrior',        emoji: '🌿', desc: 'Attended 5 cleanup drives' },
-          { certId: 'water_guardian',     title: 'Water Guardian',     emoji: '💧', desc: 'Joined 2 river cleanup events' },
-          { certId: 'zero_waste_hero',    title: 'Zero Waste Hero',    emoji: '♻️', desc: 'Classified 50 waste items' },
-          { certId: 'community_champion', title: 'Community Champion', emoji: '🤝', desc: 'Referred 3 new volunteers' },
-          { certId: 'green_streak',       title: 'Green Streak',       emoji: '🔥', desc: 'Active for 30 days in a row' },
-          { certId: 'plastic_buster',     title: 'Plastic Buster',     emoji: '🏆', desc: 'Collected 100kg of plastic' },
+          { certId: 'eco_warrior',        title: 'Eco Warrior',        ionicon: 'leaf', mdIcon: null, desc: 'Attended 5 cleanup drives' },
+          { certId: 'water_guardian',     title: 'Water Guardian',     ionicon: 'water', mdIcon: null, desc: 'Joined 2 river cleanup events' },
+          { certId: 'zero_waste_hero',    title: 'Zero Waste Hero',    ionicon: null, mdIcon: 'recycle', desc: 'Classified 50 waste items' },
+          { certId: 'community_champion', title: 'Community Champion', ionicon: 'people', mdIcon: null, desc: 'Referred 3 new volunteers' },
+          { certId: 'green_streak',       title: 'Green Streak',       ionicon: 'flame', mdIcon: null, desc: 'Active for 30 days in a row' },
+          { certId: 'plastic_buster',     title: 'Plastic Buster',     ionicon: 'trophy', mdIcon: null, desc: 'Collected 100kg of plastic' },
         ];
         const progressMap = {};
         (certRes.data || []).forEach(p => { progressMap[p.certId] = p; });
@@ -508,6 +597,36 @@ const RewardsScreen = ({ userData }) => {
     };
     loadData();
   }, [userData.firebaseUid]);
+
+  useEffect(() => {
+    if (loading || !userData?.firebaseUid) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        let lat;
+        let lng;
+        if (status === 'granted') {
+          const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+          lat = loc.coords.latitude;
+          lng = loc.coords.longitude;
+        }
+        const res = await axios.post(`${BASE_URL}/users/claim-rewards-bonuses`, {
+          firebaseUid: userData.firebaseUid,
+          lat,
+          lng,
+        });
+        if (cancelled || !res.data?.totalAwarded) return;
+        if (setUserData) {
+          const profile = await axios.get(`${BACKEND_URL}/api/users/role/${userData.firebaseUid}`);
+          setUserData({ ...profile.data, firebaseUid: userData.firebaseUid, email: userData.email });
+        }
+        const msg = (res.data.messages || []).join('\n');
+        if (msg) Alert.alert('Bonus XP', msg);
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [loading, userData.firebaseUid]);
 
   if (loading) return <View style={S.fullCenter}><ActivityIndicator color={T.primary} /></View>;
 
@@ -521,9 +640,16 @@ const RewardsScreen = ({ userData }) => {
         {['leaderboard', 'certificates'].map(s => (
           <TouchableOpacity key={s} onPress={() => setSection(s)}
             style={{ flex: 1, paddingVertical: 10, borderRadius: 11, backgroundColor: section === s ? T.primary : 'transparent', alignItems: 'center' }}>
-            <Text style={{ fontWeight: '700', fontSize: 14, color: section === s ? T.white : T.muted }}>
-              {s === 'leaderboard' ? '🏅 Leaderboard' : '🎓 Certificates'}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              {s === 'leaderboard' ? (
+                <Ionicons name="ribbon-outline" size={16} color={section === s ? T.white : T.muted} />
+              ) : (
+                <Ionicons name="school-outline" size={16} color={section === s ? T.white : T.muted} />
+              )}
+              <Text style={{ fontWeight: '700', fontSize: 14, color: section === s ? T.white : T.muted }}>
+                {s === 'leaderboard' ? 'Leaderboard' : 'Certificates'}
+              </Text>
+            </View>
           </TouchableOpacity>
         ))}
       </View>
@@ -543,14 +669,14 @@ const RewardsScreen = ({ userData }) => {
                   {userData.xp || 0} XP · {userData.badges?.length || 0} Badges
                 </Text>
               </View>
-              <Text style={{ fontSize: 40 }}>🏅</Text>
+              <Ionicons name="ribbon" size={40} color="rgba(255,255,255,0.95)" />
             </View>
 
             {/* Podium */}
             {top3.length >= 3 && (
               <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', marginBottom: 20 }}>
                 <View style={{ alignItems: 'center', marginRight: 8 }}>
-                  <Text style={{ fontSize: 22 }}>🥈</Text>
+                  <MaterialCommunityIcons name="medal" size={22} color="#90A4AE" />
                   <View style={{ width: 64, height: 80, backgroundColor: '#CFD8DC', borderTopLeftRadius: 12, borderTopRightRadius: 12, justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 8 }}>
                     <Text style={{ fontSize: 22, fontWeight: '800' }}>{top3[1].avatar}</Text>
                     <Text style={{ fontSize: 10, fontWeight: '700', color: T.mid }}>2nd</Text>
@@ -564,7 +690,7 @@ const RewardsScreen = ({ userData }) => {
                   </View>
                 </View>
                 <View style={{ alignItems: 'center', marginLeft: 8 }}>
-                  <Text style={{ fontSize: 20 }}>🥉</Text>
+                  <MaterialCommunityIcons name="medal" size={20} color="#CD7F32" />
                   <View style={{ width: 64, height: 64, backgroundColor: '#FFCCBC', borderTopLeftRadius: 12, borderTopRightRadius: 12, justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 8 }}>
                     <Text style={{ fontSize: 20, fontWeight: '800' }}>{top3[2].avatar}</Text>
                     <Text style={{ fontSize: 10, fontWeight: '700', color: T.mid }}>3rd</Text>
@@ -578,7 +704,9 @@ const RewardsScreen = ({ userData }) => {
               const isMe = e.firebaseUid === userData.firebaseUid;
               return (
                 <View key={e.firebaseUid} style={[S.card, { flexDirection: 'row', alignItems: 'center', padding: 14, borderWidth: isMe ? 2 : 0, borderColor: isMe ? T.primary : 'transparent' }]}>
-                  <Text style={{ fontSize: 22, width: 36, textAlign: 'center' }}>{medals[e.rank] || `#${e.rank}`}</Text>
+                  <View style={{ width: 36, alignItems: 'center', justifyContent: 'center' }}>
+                    {e.rank <= 3 ? <RankMedalIcon rank={e.rank} /> : <Text style={{ fontSize: 13, fontWeight: '800', color: T.mid }}>#{e.rank}</Text>}
+                  </View>
                   <View style={[S.avatar, { marginHorizontal: 12 }]}><Text style={S.avatarText}>{e.avatar}</Text></View>
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontWeight: '700', color: T.dark, fontSize: 15 }}>{e.name}{isMe ? ' (You)' : ''}</Text>
@@ -597,7 +725,11 @@ const RewardsScreen = ({ userData }) => {
             {certs.map((c, i) => (
               <View key={i} style={[S.card, { flexDirection: 'row', alignItems: 'center', opacity: c.earned ? 1 : 0.78, borderLeftWidth: 4, borderLeftColor: c.earned ? T.primary : T.border }]}>
                 <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: c.earned ? '#E8F5E9' : T.bg, justifyContent: 'center', alignItems: 'center', marginRight: 14 }}>
-                  <Text style={{ fontSize: 28 }}>{c.emoji}</Text>
+                  {c.mdIcon ? (
+                    <MaterialCommunityIcons name={c.mdIcon} size={28} color={c.earned ? T.primary : T.muted} />
+                  ) : (
+                    <Ionicons name={c.ionicon} size={28} color={c.earned ? T.primary : T.muted} />
+                  )}
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontWeight: '700', color: T.dark, fontSize: 15 }}>{c.title}</Text>
@@ -605,9 +737,12 @@ const RewardsScreen = ({ userData }) => {
                   {c.earned ? (
                     <View style={{ flexDirection: 'row', marginTop: 6 }}>
                       <View style={{ backgroundColor: '#E8F5E9', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 }}>
-                        <Text style={{ color: T.primary, fontSize: 11, fontWeight: '700' }}>
-                          ✓ Earned {c.earnedAt ? new Date(c.earnedAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : ''}
-                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                          <Ionicons name="checkmark-circle" size={14} color={T.primary} />
+                          <Text style={{ color: T.primary, fontSize: 11, fontWeight: '700' }}>
+                            Earned {c.earnedAt ? new Date(c.earnedAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : ''}
+                          </Text>
+                        </View>
                       </View>
                     </View>
                   ) : (
@@ -646,16 +781,18 @@ const ReportsScreen = ({ userData }) => {
       .finally(() => setLoading(false));
   }, [userData.firebaseUid]);
 
-  const breakdown = [
-    { type: 'Dry Waste',  pct: 48, color: '#0288D1', emoji: '♻️' },
-    { type: 'Wet Waste',  pct: 31, color: '#388E3C', emoji: '🍃' },
-    { type: 'Hazardous',  pct: 13, color: '#D32F2F', emoji: '⚠️' },
-    { type: 'E-Waste',    pct:  8, color: '#7B1FA2', emoji: '💻' },
-  ];
+  const wasteFromFinalAi =
+    (report?.finalAiSampleCount || 0) > 0
+      ? [
+          { type: 'Latest Final AI reading', pct: Math.min(100, Math.round(report.finalAiLatestBagPercent || 0)), color: '#0288D1', ionicon: 'analytics-outline' },
+          { type: 'Average (all Final AI sessions)', pct: Math.min(100, Math.round(report.finalAiAvgBagPercent || 0)), color: '#388E3C', ionicon: 'trending-up-outline' },
+        ]
+      : [];
 
-  // Build monthly bar chart from real data (last 6 months)
-  const monthly = (report?.monthlyActivity || []).slice(-6);
-  const maxKg   = Math.max(...monthly.map(m => m.kgCollected || 1), 1);
+  const formatHours = (h) => {
+    const n = Number(h) || 0;
+    return n % 1 === 0 ? String(n) : n.toFixed(1);
+  };
 
   if (loading) return <View style={S.fullCenter}><ActivityIndicator color={T.primary} /></View>;
 
@@ -664,51 +801,41 @@ const ReportsScreen = ({ userData }) => {
       <GreenHeader title="My Impact Report" subtitle="Your environmental footprint" />
       <ScrollView contentContainerStyle={{ padding: 20 }}>
         <View style={{ flexDirection: 'row', marginHorizontal: -4, marginBottom: 8 }}>
-          <StatBox emoji="🗓️" value={String(report?.totalEventsJoined || 0)}  label={'Events\nAttended'} />
-          <StatBox emoji="♻️" value={String(report?.totalScans || 0)}          label={'Items\nClassified'} />
-          <StatBox emoji="⏱️" value={`${report?.totalHoursVolunteered || 0}h`} label={'Time\nVolunteered'} />
-          <StatBox emoji="🌍" value={`${(report?.co2SavedTons || 0).toFixed(1)}t`} label={'CO₂\nSaved'} />
+          <StatBox ionicon="calendar-outline" value={String(report?.eventsJoinedCount ?? report?.totalEventsJoined ?? 0)} label={'Events\nJoined'} />
+          <StatBox mdIcon="recycle" value={String(report?.finalAiItemCount ?? 0)} label={'Final AI\nItems'} />
+          <StatBox ionicon="time-outline" value={`${formatHours(report?.volunteerHoursPastEvents)}h`} label={'Time\nVolunteered'} />
+          <StatBox ionicon="earth-outline" value={`${(report?.co2SavedFromFinalAiTons ?? 0).toFixed(2)}t`} label={'CO₂\nSaved'} />
         </View>
 
-        {monthly.length > 0 && (
-          <View style={S.card}>
-            <Text style={[S.h3, { marginBottom: 4 }]}>Monthly Activity</Text>
-            <Text style={[S.caption, { marginBottom: 20 }]}>Waste collected (kg) per month</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'flex-end', height: 120, justifyContent: 'space-between' }}>
-              {monthly.map(m => (
-                <View key={m.month} style={{ alignItems: 'center', flex: 1 }}>
-                  <Text style={{ fontSize: 11, color: T.primary, fontWeight: '700', marginBottom: 4 }}>
-                    {Math.round(m.kgCollected || 0)}
-                  </Text>
-                  <View style={{ width: 28, height: ((m.kgCollected || 0) / maxKg) * 90, backgroundColor: T.primary, borderRadius: 6 }} />
-                  <Text style={{ fontSize: 10, color: T.muted, marginTop: 6 }}>{m.month?.slice(5)}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
-
         <View style={S.card}>
-          <Text style={[S.h3, { marginBottom: 16 }]}>Waste Type Breakdown</Text>
-          {breakdown.map(w => (
-            <View key={w.type} style={{ marginBottom: 14 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-                <Text style={{ fontWeight: '600', color: T.dark, fontSize: 13 }}>{w.emoji}  {w.type}</Text>
-                <Text style={{ fontWeight: '700', color: w.color, fontSize: 13 }}>{w.pct}%</Text>
+          <Text style={[S.h3, { marginBottom: 4 }]}>Waste collected (Final AI)</Text>
+          <Text style={[S.caption, { marginBottom: 14 }]}>Bag fill % from Final AI Classification sessions</Text>
+          {wasteFromFinalAi.length === 0 ? (
+            <Text style={[S.body, { color: T.muted }]}>Open Scan → Final AI Classification and run a bag check to see percentages here.</Text>
+          ) : (
+            wasteFromFinalAi.map(w => (
+              <View key={w.type} style={{ marginBottom: 14 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name={w.ionicon} size={16} color={w.color} />
+                    <Text style={{ fontWeight: '600', color: T.dark, fontSize: 13 }}>{w.type}</Text>
+                  </View>
+                  <Text style={{ fontWeight: '700', color: w.color, fontSize: 13 }}>{w.pct}%</Text>
+                </View>
+                <View style={{ height: 8, backgroundColor: T.border, borderRadius: 4 }}>
+                  <View style={{ height: '100%', width: `${w.pct}%`, backgroundColor: w.color, borderRadius: 4 }} />
+                </View>
               </View>
-              <View style={{ height: 8, backgroundColor: T.border, borderRadius: 4 }}>
-                <View style={{ height: '100%', width: `${w.pct}%`, backgroundColor: w.color, borderRadius: 4 }} />
-              </View>
-            </View>
-          ))}
+            ))
+          )}
         </View>
 
         <View style={S.card}>
           <Text style={[S.h3, { marginBottom: 8 }]}>Streak & Level</Text>
           <View style={{ flexDirection: 'row', marginHorizontal: -4 }}>
-            <StatBox emoji="🔥" value={String(report?.streak || 0)} label="Day Streak" />
-            <StatBox emoji="⭐" value={`Lv ${report?.level || 1}`} label="Current Level" />
-            <StatBox emoji="🏅" value={String(report?.badges?.length || 0)} label="Badges" />
+            <StatBox ionicon="flame-outline" value={String(report?.streak || 0)} label="Day Streak" />
+            <StatBox ionicon="star-outline" value={`Lv ${report?.level || 1}`} label="Current Level" />
+            <StatBox ionicon="ribbon-outline" value={String(report?.badges?.length || 0)} label="Badges" />
           </View>
         </View>
       </ScrollView>
@@ -758,6 +885,34 @@ function eventDateYmdFromEv(ev) {
     const y = d.getFullYear();
     const mo = String(d.getMonth() + 1).padStart(2, '0');
     const da = String(d.getDate()).padStart(2, '0');
+    return `${y}-${mo}-${da}`;
+  }
+}
+
+function todayYmdIST() {
+  try {
+    return new Date().toLocaleDateString('en-CA', { timeZone: GEOFENCE_TZ });
+  } catch {
+    const d = new Date();
+    const y = d.getFullYear();
+    const mo = String(d.getMonth() + 1).padStart(2, '0');
+    const da = String(d.getDate()).padStart(2, '0');
+    return `${y}-${mo}-${da}`;
+  }
+}
+
+/** Calendar date in IST, shifted by deltaDays (same approach as geofence wall-clock). */
+function addCalendarDaysIST(ymd, deltaDays) {
+  if (!ymd || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return ymd;
+  const noon = new Date(`${ymd}T12:00:00${GEOFENCE_TZ_OFFSET}`);
+  if (Number.isNaN(noon.getTime())) return ymd;
+  noon.setDate(noon.getDate() + deltaDays);
+  try {
+    return noon.toLocaleDateString('en-CA', { timeZone: GEOFENCE_TZ });
+  } catch {
+    const y = noon.getFullYear();
+    const mo = String(noon.getMonth() + 1).padStart(2, '0');
+    const da = String(noon.getDate()).padStart(2, '0');
     return `${y}-${mo}-${da}`;
   }
 }
@@ -879,7 +1034,10 @@ const EventGeofenceScreen = ({ ev, userData, onBack }) => {
       <GreenHeader title={ev.name} subtitle="Attendance & geofence" onBack={onBack} bgColor={T.primary} />
       <ScrollView contentContainerStyle={{ padding: 24 }} keyboardShouldPersistTaps="handled">
         <View style={S.card}>
-          <Text style={[S.caption, { marginBottom: 8 }]}>📍 {ev.location}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+            <Ionicons name="location-outline" size={14} color={T.muted} />
+            <Text style={[S.caption, { flex: 1 }]}>{ev.location}</Text>
+          </View>
           <Text style={S.body}>Window: {ev.time} – {ev.endTime}</Text>
         </View>
         {!started ? (
@@ -950,14 +1108,42 @@ const OrganiserEventDetailScreen = ({ userData, ev, onBack }) => {
 
 const EventsScreen = ({ userData, events, loading, onRegister, onLeave, onOpenGeofence }) => {
   const [filter, setFilter] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const todayYmd = todayYmdIST();
+  const upcomingEndYmd = addCalendarDaysIST(todayYmd, 30);
+  const searchLower = searchQuery.trim().toLowerCase();
   const filtered = events.filter(ev => {
-    if (filter === 'Joined') return ev.participants?.includes(userData?.firebaseUid);
+    const evYmd = eventDateYmdFromEv(ev);
+    if (evYmd < todayYmd) return false;
+    if (filter === 'Upcoming' && evYmd > upcomingEndYmd) return false;
+    if (filter === 'Joined' && !ev.participants?.includes(userData?.firebaseUid)) return false;
+    if (searchLower.length > 0 && !String(ev.name || '').toLowerCase().includes(searchLower)) return false;
     return true;
   });
   if (loading) return <View style={S.fullCenter}><ActivityIndicator size="large" color={T.primary} /><Text style={{ color: T.muted, marginTop: 12 }}>Loading events…</Text></View>;
   return (
     <View style={{ flex: 1, backgroundColor: T.bg }}>
       <GreenHeader title="Cleanup Events" subtitle="Join a drive near you" />
+      <View style={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 6 }}>
+        <TextInput
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Search by event name…"
+          placeholderTextColor={T.muted}
+          autoCapitalize="none"
+          autoCorrect={false}
+          style={{
+            backgroundColor: T.card,
+            borderRadius: 12,
+            paddingHorizontal: 14,
+            paddingVertical: Platform.OS === 'ios' ? 12 : 10,
+            fontSize: 15,
+            color: T.dark,
+            borderWidth: 1,
+            borderColor: T.border,
+          }}
+        />
+      </View>
       <View style={{ flexDirection: 'row', padding: 16, paddingBottom: 4 }}>
         {['All', 'Upcoming', 'Joined'].map(f => (
           <TouchableOpacity key={f} onPress={() => setFilter(f)}
@@ -969,7 +1155,7 @@ const EventsScreen = ({ userData, events, loading, onRegister, onLeave, onOpenGe
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         {filtered.length === 0 && (
           <View style={{ alignItems: 'center', padding: 40 }}>
-            <Text style={{ fontSize: 56, marginBottom: 12 }}>🗓️</Text>
+            <Ionicons name="calendar-outline" size={56} color={T.muted} style={{ marginBottom: 12 }} />
             <Text style={S.h3}>No events found</Text>
             <Text style={[S.body, { textAlign: 'center', marginTop: 4 }]}>Check back later for new drives</Text>
           </View>
@@ -985,29 +1171,40 @@ const EventsScreen = ({ userData, events, loading, onRegister, onLeave, onOpenGe
               <Image source={{ uri: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600' }}
                 style={{ width: '100%', height: 140, borderTopLeftRadius: 20, borderTopRightRadius: 20 }} />
               {isEnrolled && !isWaiting && (
-                <View style={{ position: 'absolute', top: 12, right: 12, backgroundColor: T.primary, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 5 }}>
-                  <Text style={{ color: T.white, fontWeight: '700', fontSize: 12 }}>✓ Joined</Text>
+                <View style={{ position: 'absolute', top: 12, right: 12, backgroundColor: T.primary, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 5, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Ionicons name="checkmark-circle" size={14} color={T.white} />
+                  <Text style={{ color: T.white, fontWeight: '700', fontSize: 12 }}>Joined</Text>
                 </View>
               )}
               {isWaiting && (
-                <View style={{ position: 'absolute', top: 12, right: 12, backgroundColor: T.gold, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 5 }}>
-                  <Text style={{ color: '#4a3000', fontWeight: '700', fontSize: 12 }}>⏳ Queue #{idx - ev.volunteersRequired + 1}</Text>
+                <View style={{ position: 'absolute', top: 12, right: 12, backgroundColor: T.gold, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 5, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Ionicons name="hourglass-outline" size={14} color="#4a3000" />
+                  <Text style={{ color: '#4a3000', fontWeight: '700', fontSize: 12 }}>Queue #{idx - ev.volunteersRequired + 1}</Text>
                 </View>
               )}
               <View style={{ padding: 16 }}>
                 <Text style={[S.h3, { marginBottom: 8 }]}>{ev.name}</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 10 }}>
-                  <View style={[S.chip, { marginRight: 8 }]}><Text style={{ fontSize: 12, color: T.mid }}>📍 {ev.location}</Text></View>
-                  <View style={S.chip}><Text style={{ fontSize: 12, color: T.mid }}>📅 {new Date(ev.date).toDateString()}</Text></View>
+                  <View style={[S.chip, { marginRight: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
+                    <Ionicons name="location-outline" size={12} color={T.mid} />
+                    <Text style={{ fontSize: 12, color: T.mid }}>{ev.location}</Text>
+                  </View>
+                  <View style={[S.chip, { flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
+                    <Ionicons name="calendar-outline" size={12} color={T.mid} />
+                    <Text style={{ fontSize: 12, color: T.mid }}>{new Date(ev.date).toDateString()}</Text>
+                  </View>
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
                   <Text style={{ fontSize: 13, color: T.muted }}>
                     <Text style={{ fontWeight: '700', color: spotsLeft > 0 ? T.primary : T.danger }}>{spotsLeft > 0 ? `${spotsLeft} spots left` : 'Full'}</Text>
                     {' '}of {ev.volunteersRequired}
                   </Text>
-                  <Text style={{ fontSize: 12, color: T.muted }}>
-                    ⏰ {ev.time}{ev.endTime ? ` – ${ev.endTime}` : ''}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Ionicons name="time-outline" size={13} color={T.muted} />
+                    <Text style={{ fontSize: 12, color: T.muted }}>
+                      {ev.time}{ev.endTime ? ` – ${ev.endTime}` : ''}
+                    </Text>
+                  </View>
                 </View>
                 <View style={{ height: 6, backgroundColor: T.border, borderRadius: 3, marginBottom: 14 }}>
                   <View style={{ height: '100%', width: `${Math.min(((ev.participants?.length || 0) / ev.volunteersRequired) * 100, 100)}%`, backgroundColor: spotsLeft > 0 ? T.primary : T.danger, borderRadius: 3 }} />
@@ -1017,7 +1214,10 @@ const EventsScreen = ({ userData, events, loading, onRegister, onLeave, onOpenGe
                 </TouchableOpacity>
                 {isEnrolled && !isWaiting && onOpenGeofence ? (
                   <TouchableOpacity style={[S.btnAccent, { marginTop: 12 }]} onPress={() => onOpenGeofence(ev)}>
-                    <Text style={S.btnText}>📍  Start attendance</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                      <Ionicons name="navigate-outline" size={18} color={T.white} />
+                      <Text style={S.btnText}>Start attendance</Text>
+                    </View>
                   </TouchableOpacity>
                 ) : null}
                 {isWaiting && <Text style={{ fontSize: 11, color: '#b45309', marginTop: 8, textAlign: 'center', fontStyle: 'italic' }}>You'll move up automatically if someone leaves.</Text>}
@@ -1204,7 +1404,7 @@ const AddEventForm = ({ userData, onBack, onSuccess }) => {
         location: (data.location || '').trim() || 'Geofenced area',
         geofenceCoordinates: data.geofenceCoordinates,
       });
-      Alert.alert('Success! 🎉', 'Event is now live!');
+      Alert.alert('Success!', 'Event is now live!');
       onSuccess();
     } catch { Alert.alert('Error', 'Failed to create event.'); }
     finally { setLoading(false); }
@@ -1284,15 +1484,25 @@ const AddEventForm = ({ userData, onBack, onSuccess }) => {
           <View style={S.inputWrap}>
             <Text style={S.inputLabel}>Cleanup area (map)</Text>
             <TouchableOpacity onPress={openMapPicker} style={[S.btnOutline, { borderColor: T.accent }]}>
-              <Text style={{ color: T.accent, fontWeight: '800' }}>
-                {data.geofenceCoordinates ? '✓ Area set — change on map' : 'Open map & draw polygon'}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                {data.geofenceCoordinates ? <Ionicons name="checkmark-circle" size={18} color={T.accent} /> : null}
+                <Text style={{ color: T.accent, fontWeight: '800', flex: 1 }}>
+                  {data.geofenceCoordinates ? 'Area set — change on map' : 'Open map & draw polygon'}
+                </Text>
+              </View>
             </TouchableOpacity>
           </View>
           <StyledInput label="Volunteers Required" placeholder="e.g. 30" value={data.volunteers} onChangeText={t => setData({ ...data, volunteers: t })} keyboardType="numeric" />
         </View>
         <TouchableOpacity onPress={handleSubmit} disabled={loading} style={[S.btnPrimary, loading && S.btnDisabled]}>
-          {loading ? <ActivityIndicator color={T.white} /> : <Text style={S.btnText}>🎉  Publish Event</Text>}
+          {loading ? (
+            <ActivityIndicator color={T.white} />
+          ) : (
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <Ionicons name="rocket-outline" size={18} color={T.white} />
+              <Text style={S.btnText}>Publish Event</Text>
+            </View>
+          )}
         </TouchableOpacity>
       </ScrollView>
       <TimePickerModal
@@ -1342,7 +1552,7 @@ const MyEventsScreen = ({ userData, onAddNew, onSelectEvent }) => {
         attendedUids: ev.participants || [],
         kgCollected:  0,   // organiser can update later
       });
-      Alert.alert('✅ Event Completed', 'XP awarded to all participants!');
+      Alert.alert('Event Completed', 'XP awarded to all participants!');
       // Refresh list
       const r = await axios.get(`${BACKEND_URL}/api/events/organiser-stats/${userData.firebaseUid}`);
       setEvents(r.data);
@@ -1356,11 +1566,14 @@ const MyEventsScreen = ({ userData, onAddNew, onSelectEvent }) => {
       <GreenHeader title="My Events" bgColor={T.accent} />
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         <TouchableOpacity style={[S.btnAccent, { marginBottom: 20 }]} onPress={onAddNew}>
-          <Text style={S.btnText}>＋  Create New Event</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <Ionicons name="add-circle-outline" size={18} color={T.white} />
+            <Text style={S.btnText}>Create New Event</Text>
+          </View>
         </TouchableOpacity>
         {events.length === 0 && (
           <View style={{ alignItems: 'center', padding: 40 }}>
-            <Text style={{ fontSize: 56 }}>📭</Text>
+            <MaterialCommunityIcons name="calendar-blank-outline" size={56} color={T.muted} />
             <Text style={[S.h3, { marginTop: 12 }]}>No Events Yet</Text>
             <Text style={[S.body, { textAlign: 'center' }]}>Create your first cleanup event above</Text>
           </View>
@@ -1371,12 +1584,25 @@ const MyEventsScreen = ({ userData, onAddNew, onSelectEvent }) => {
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                 <Text style={[S.h3, { flex: 1 }]}>{ev.name}</Text>
                 <View style={[S.tag, { backgroundColor: ev.status === 'completed' ? '#E8F5E9' : T.accentLight }]}>
-                  <Text style={[S.tagText, { color: ev.status === 'completed' ? T.primary : T.accent }]}>
-                    {ev.status === 'completed' ? '✓ Done' : `${ev.participants?.length || 0} joined`}
-                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    {ev.status === 'completed' ? <Ionicons name="checkmark-circle" size={12} color={T.primary} /> : null}
+                    <Text style={[S.tagText, { color: ev.status === 'completed' ? T.primary : T.accent }]}>
+                      {ev.status === 'completed' ? 'Done' : `${ev.participants?.length || 0} joined`}
+                    </Text>
+                  </View>
                 </View>
               </View>
-              <Text style={[S.body, { marginBottom: 10 }]}>📍 {ev.location}  ·  📅 {new Date(ev.date).toDateString()}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Ionicons name="location-outline" size={14} color={T.mid} />
+                  <Text style={S.body}>{ev.location}</Text>
+                </View>
+                <Text style={[S.body, { color: T.muted }]}>·</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Ionicons name="calendar-outline" size={14} color={T.mid} />
+                  <Text style={S.body}>{new Date(ev.date).toDateString()}</Text>
+                </View>
+              </View>
               <Text style={[S.caption, { marginBottom: 6 }]}>Tap for geofence attendance table →</Text>
             </TouchableOpacity>
             <View style={{ height: 8, backgroundColor: T.border, borderRadius: 4, marginBottom: 8 }}>
@@ -1390,7 +1616,12 @@ const MyEventsScreen = ({ userData, onAddNew, onSelectEvent }) => {
                 style={[S.btnAccent, { paddingVertical: 12 }, completing === ev._id && S.btnDisabled]}>
                 {completing === ev._id
                   ? <ActivityIndicator color={T.white} />
-                  : <Text style={S.btnText}>✅  Mark as Completed</Text>}
+                  : (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                      <Ionicons name="checkmark-done-outline" size={18} color={T.white} />
+                      <Text style={S.btnText}>Mark as Completed</Text>
+                    </View>
+                  )}
               </TouchableOpacity>
             )}
           </View>
@@ -1420,9 +1651,9 @@ const AnalyticsScreen = ({ userData }) => {
       <GreenHeader title="Event Analytics" bgColor={T.accent} />
       <ScrollView contentContainerStyle={{ padding: 20 }}>
         <View style={{ flexDirection: 'row', marginHorizontal: -4, marginBottom: 16 }}>
-          <StatBox emoji="🗓️" value={String(stats?.eventsCreated || 0)}            label={'Events\nCreated'} />
-          <StatBox emoji="👥" value={String(stats?.totalVolunteersManaged || 0)}   label={'Total\nVolunteers'} />
-          <StatBox emoji="⭐" value={String(stats?.avgEventRating || 0)}           label={'Avg\nRating'} />
+          <StatBox ionicon="calendar-outline" value={String(stats?.eventsCreated || 0)} label={'Events\nCreated'} />
+          <StatBox ionicon="people-outline" value={String(stats?.totalVolunteersManaged || 0)} label={'Total\nVolunteers'} />
+          <StatBox ionicon="star-outline" value={String(stats?.avgEventRating || 0)} label={'Avg\nRating'} />
         </View>
         <View style={S.card}>
           <Text style={[S.h3, { marginBottom: 16 }]}>Event Performance</Text>
@@ -1451,7 +1682,6 @@ const AnalyticsScreen = ({ userData }) => {
 // ── SETTINGS ──────────────────────────────────────────────────────────────────
 
 const SettingsScreen = ({ userData, handleLogout }) => {
-  const roleEmoji = { volunteer: '🌿', organiser: '📋', csr: '🏢' };
   const roleName  = { volunteer: 'Volunteer', organiser: 'Organiser', csr: 'CSR Partner' };
   return (
     <View style={{ flex: 1, backgroundColor: T.bg }}>
@@ -1464,20 +1694,22 @@ const SettingsScreen = ({ userData, handleLogout }) => {
           <Text style={{ color: T.white, fontSize: 22, fontWeight: '800' }}>{userData?.name}</Text>
           <Text style={{ color: 'rgba(255,255,255,0.7)', marginTop: 4, fontSize: 14 }}>{userData?.email}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 6, marginTop: 14 }}>
-            <Text style={{ fontSize: 18, marginRight: 6 }}>{roleEmoji[userData?.role] || '👤'}</Text>
+            <View style={{ marginRight: 8 }}>
+              <RoleAvatarIcon role={userData?.role} size={20} color={T.white} />
+            </View>
             <Text style={{ color: T.white, fontWeight: '700', fontSize: 13 }}>{roleName[userData?.role] || userData?.role}</Text>
           </View>
         </View>
         <View style={S.card}>
           <Text style={[S.label, { marginBottom: 14 }]}>Account Information</Text>
           {[
-            { label: 'Full Name',     value: userData?.name     || '—', emoji: '👤' },
-            { label: 'Email',         value: userData?.email    || '—', emoji: '📧' },
-            { label: 'Location',      value: userData?.location || '—', emoji: '📍' },
-            { label: 'Member Since',  value: userData?.createdAt ? new Date(userData.createdAt).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) : '—', emoji: '📅' },
+            { label: 'Full Name',     value: userData?.name     || '—', ionicon: 'person-outline' },
+            { label: 'Email',         value: userData?.email    || '—', ionicon: 'mail-outline' },
+            { label: 'Location',      value: userData?.location || '—', ionicon: 'location-outline' },
+            { label: 'Member Since',  value: userData?.createdAt ? new Date(userData.createdAt).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) : '—', ionicon: 'calendar-outline' },
           ].map((item, i) => (
             <View key={i} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: i < 3 ? 1 : 0, borderBottomColor: T.border }}>
-              <Text style={{ fontSize: 20, marginRight: 14 }}>{item.emoji}</Text>
+              <Ionicons name={item.ionicon} size={22} color={T.primary} style={{ marginRight: 14 }} />
               <View style={{ flex: 1 }}>
                 <Text style={S.caption}>{item.label}</Text>
                 <Text style={{ fontWeight: '600', color: T.dark, fontSize: 14, marginTop: 1 }}>{item.value}</Text>
@@ -1488,19 +1720,22 @@ const SettingsScreen = ({ userData, handleLogout }) => {
         <View style={S.card}>
           <Text style={[S.label, { marginBottom: 14 }]}>Preferences</Text>
           {[
-            { emoji: '🔔', label: 'Push Notifications' },
-            { emoji: '🔒', label: 'Privacy Settings' },
-            { emoji: '❓', label: 'Help & Support' },
-            { emoji: '📋', label: 'Terms of Service' },
+            { ionicon: 'notifications-outline', label: 'Push Notifications' },
+            { ionicon: 'lock-closed-outline', label: 'Privacy Settings' },
+            { ionicon: 'help-circle-outline', label: 'Help & Support' },
+            { ionicon: 'document-text-outline', label: 'Terms of Service' },
           ].map((opt, i) => (
             <TouchableOpacity key={i} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, borderBottomWidth: i < 3 ? 1 : 0, borderBottomColor: T.border }}>
-              <Text style={{ fontSize: 20, marginRight: 14 }}>{opt.emoji}</Text>
+              <Ionicons name={opt.ionicon} size={22} color={T.primary} style={{ marginRight: 14 }} />
               <Text style={{ flex: 1, fontWeight: '500', color: T.dark, fontSize: 14 }}>{opt.label}</Text>
               <Text style={{ color: T.muted, fontSize: 18 }}>›</Text>
             </TouchableOpacity>
           ))}
         </View>
-        <Text style={[S.caption, { textAlign: 'center', marginBottom: 16 }]}>SwachhMitra v2.0.0 · Made with 🌱</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+          <Text style={[S.caption, { textAlign: 'center' }]}>SwachhMitra v2.0.0 · Made with </Text>
+          <MaterialCommunityIcons name="sprout" size={14} color={T.muted} style={{ marginLeft: 2 }} />
+        </View>
         <TouchableOpacity onPress={handleLogout} style={S.btnDanger}><Text style={S.btnText}>Log Out</Text></TouchableOpacity>
         <View style={{ height: 24 }} />
       </ScrollView>
@@ -1513,9 +1748,15 @@ const SettingsScreen = ({ userData, handleLogout }) => {
 const VolunteerHome = ({ userData }) => (
   <View style={{ flex: 1, backgroundColor: T.bg }}>
     <View style={{ backgroundColor: T.primary, paddingTop: Platform.OS === 'ios' ? 54 : 34, paddingBottom: 30, paddingHorizontal: 24 }}>
-      <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: '700' }}>Good morning 🌞</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <Ionicons name="sunny-outline" size={16} color="rgba(255,255,255,0.75)" />
+        <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: '700' }}>Good morning</Text>
+      </View>
       <Text style={{ color: T.white, fontSize: 26, fontWeight: '800', marginTop: 2 }}>{userData?.name || 'Volunteer'}</Text>
-      <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, marginTop: 2 }}>🌿 Level {userData?.level || 1} · {userData?.location || 'Mumbai'}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+        <Ionicons name="leaf-outline" size={14} color="rgba(255,255,255,0.75)" />
+        <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>Level {userData?.level || 1} · {userData?.location || 'Mumbai'}</Text>
+      </View>
     </View>
     <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20 }}>
       <View style={[S.card, { borderLeftWidth: 4, borderLeftColor: T.primary }]}>
@@ -1523,30 +1764,39 @@ const VolunteerHome = ({ userData }) => (
           <View style={S.avatar}><Text style={S.avatarText}>{(userData?.name || 'V').charAt(0).toUpperCase()}</Text></View>
           <View style={{ marginLeft: 14 }}>
             <Text style={S.h3}>{userData?.name}</Text>
-            <Text style={{ color: T.muted, fontSize: 13 }}>🏅 {userData?.xp || 0} XP · {userData?.badges?.length || 0} Badges</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Ionicons name="ribbon-outline" size={14} color={T.muted} />
+              <Text style={{ color: T.muted, fontSize: 13 }}>{userData?.xp || 0} XP · {userData?.badges?.length || 0} Badges</Text>
+            </View>
           </View>
         </View>
         <XPBar xp={userData?.xp || 0} level={userData?.level || 1} />
         <View style={{ flexDirection: 'row', marginTop: 14 }}>
-          <View style={[S.chip, { backgroundColor: '#E8F5E9' }]}><Text style={{ color: T.primary, fontWeight: '700', fontSize: 12 }}>🏆 {userData?.badges?.length || 0} Badges</Text></View>
-          <View style={[S.chip, { backgroundColor: '#E0F7FA' }]}><Text style={{ color: T.accent, fontWeight: '700', fontSize: 12 }}>📸 {userData?.totalScans || 0} Scans</Text></View>
+          <View style={[S.chip, { backgroundColor: '#E8F5E9', flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
+            <Ionicons name="trophy-outline" size={14} color={T.primary} />
+            <Text style={{ color: T.primary, fontWeight: '700', fontSize: 12 }}>{userData?.badges?.length || 0} Badges</Text>
+          </View>
+          <View style={[S.chip, { backgroundColor: '#E0F7FA', flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
+            <Ionicons name="camera-outline" size={14} color={T.accent} />
+            <Text style={{ color: T.accent, fontWeight: '700', fontSize: 12 }}>{userData?.totalScans || 0} Scans</Text>
+          </View>
         </View>
       </View>
       <Text style={[S.label, { marginBottom: 14 }]}>Your Impact</Text>
       <View style={{ flexDirection: 'row', marginHorizontal: -4, marginBottom: 20 }}>
-        <StatBox emoji="🗓️" value={String(userData?.totalEventsJoined    || 0)} label="Events Joined" />
-        <StatBox emoji="♻️" value={String(userData?.totalScans            || 0)} label="Items Scanned" />
-        <StatBox emoji="🌍" value={`${(userData?.co2SavedTons || 0).toFixed(1)}t`} label="CO₂ Saved" />
+        <StatBox ionicon="calendar-outline" value={String(userData?.totalEventsJoined    || 0)} label="Events Joined" />
+        <StatBox mdIcon="recycle" value={String(userData?.totalScans            || 0)} label="Items Scanned" />
+        <StatBox ionicon="earth-outline" value={`${(userData?.co2SavedTons || 0).toFixed(1)}t`} label="CO₂ Saved" />
       </View>
       <Text style={[S.label, { marginBottom: 14 }]}>Quick Actions</Text>
       <View style={{ flexDirection: 'row', marginHorizontal: -6, marginBottom: 24 }}>
         {[
-          { emoji: '🗓️', title: 'Find Events', subtitle: 'Join a drive near you',  color: T.primary },
-          { emoji: '📸', title: 'Scan Waste',  subtitle: 'Classify & earn XP',     color: T.accent },
+          { ionicon: 'calendar', title: 'Find Events', subtitle: 'Join a drive near you',  color: T.primary },
+          { ionicon: 'camera', title: 'Scan Waste',  subtitle: 'Classify & earn XP',     color: T.accent },
         ].map(a => (
           <View key={a.title} style={{ flex: 1, marginHorizontal: 6 }}>
             <View style={{ backgroundColor: a.color, borderRadius: 18, padding: 20, alignItems: 'center', shadowColor: a.color, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, elevation: 6 }}>
-              <Text style={{ fontSize: 32, marginBottom: 8 }}>{a.emoji}</Text>
+              <Ionicons name={a.ionicon} size={36} color={T.white} style={{ marginBottom: 8 }} />
               <Text style={{ color: T.white, fontWeight: '700', fontSize: 14 }}>{a.title}</Text>
               <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, textAlign: 'center', marginTop: 3 }}>{a.subtitle}</Text>
             </View>
@@ -1561,15 +1811,21 @@ const VolunteerHome = ({ userData }) => (
 const OrganiserHome = ({ userData }) => (
   <View style={{ flex: 1, backgroundColor: T.bg }}>
     <View style={{ backgroundColor: T.accent, paddingTop: Platform.OS === 'ios' ? 54 : 34, paddingBottom: 30, paddingHorizontal: 24 }}>
-      <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13 }}>Welcome back 👋</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <Ionicons name="hand-left-outline" size={16} color="rgba(255,255,255,0.85)" />
+        <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13 }}>Welcome back</Text>
+      </View>
       <Text style={{ color: T.white, fontSize: 26, fontWeight: '800', marginTop: 2 }}>{userData?.name}</Text>
-      <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>📋 Event Organiser · {userData?.location}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+        <MaterialCommunityIcons name="calendar-check" size={15} color="rgba(255,255,255,0.85)" />
+        <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>Event Organiser · {userData?.location}</Text>
+      </View>
     </View>
     <ScrollView contentContainerStyle={{ padding: 20 }}>
       <View style={{ flexDirection: 'row', marginHorizontal: -4, marginBottom: 20 }}>
-        <StatBox emoji="🗓️" value={String(userData?.eventsCreated || 0)}           label={'Events\nCreated'} />
-        <StatBox emoji="👥" value={String(userData?.totalVolunteersManaged || 0)}  label={'Volunteers\nManaged'} />
-        <StatBox emoji="⭐" value={String(userData?.avgEventRating || 0)}          label={'Avg\nRating'} />
+        <StatBox ionicon="calendar-outline" value={String(userData?.eventsCreated || 0)} label={'Events\nCreated'} />
+        <StatBox ionicon="people-outline" value={String(userData?.totalVolunteersManaged || 0)} label={'Volunteers\nManaged'} />
+        <StatBox ionicon="star-outline" value={String(userData?.avgEventRating || 0)} label={'Avg\nRating'} />
       </View>
     </ScrollView>
   </View>
@@ -1584,15 +1840,21 @@ const CSRHome = ({ userData }) => {
   return (
     <View style={{ flex: 1, backgroundColor: T.bg }}>
       <View style={{ backgroundColor: '#4527A0', paddingTop: Platform.OS === 'ios' ? 54 : 34, paddingBottom: 30, paddingHorizontal: 24 }}>
-        <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>Good to see you 🤝</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Ionicons name="people-outline" size={16} color="rgba(255,255,255,0.8)" />
+          <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>Good to see you</Text>
+        </View>
         <Text style={{ color: T.white, fontSize: 26, fontWeight: '800', marginTop: 2 }}>{userData?.name}</Text>
-        <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>🏢 CSR Partner · {userData?.location}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+          <MaterialCommunityIcons name="office-building-outline" size={16} color="rgba(255,255,255,0.75)" />
+          <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>CSR Partner · {userData?.location}</Text>
+        </View>
       </View>
       <ScrollView contentContainerStyle={{ padding: 20 }}>
         <View style={{ flexDirection: 'row', marginHorizontal: -4, marginBottom: 20 }}>
-          <StatBox emoji="💰" value={stats ? `₹${(stats.totalFunded/100000).toFixed(1)}L` : '—'} label={'Total\nFunded'} />
-          <StatBox emoji="🗓️" value={stats ? String(stats.eventsSponsored?.length || 0) : '—'} label={'Events\nSponsored'} />
-          <StatBox emoji="🌍" value={stats ? `${(stats.co2OffsetTons || 0).toFixed(1)}t` : '—'} label={'CO₂\nOffset'} />
+          <StatBox ionicon="cash-outline" value={stats ? `₹${(stats.totalFunded/100000).toFixed(1)}L` : '—'} label={'Total\nFunded'} />
+          <StatBox ionicon="calendar-outline" value={stats ? String(stats.eventsSponsored?.length || 0) : '—'} label={'Events\nSponsored'} />
+          <StatBox ionicon="earth-outline" value={stats ? `${(stats.co2OffsetTons || 0).toFixed(1)}t` : '—'} label={'CO₂\nOffset'} />
         </View>
         <View style={[S.card, { borderLeftWidth: 4, borderLeftColor: '#4527A0' }]}>
           <Text style={[S.h3, { marginBottom: 12 }]}>Impact This Quarter</Text>
@@ -1627,7 +1889,12 @@ const ChatListView = ({ userData, onSelectChat }) => {
     <View style={{ flex: 1, backgroundColor: T.bg }}>
       <GreenHeader title="Messages" subtitle="Connect with partners" />
       <ScrollView contentContainerStyle={{ padding: 16 }}>
-        {partners.length === 0 && <View style={{ alignItems: 'center', padding: 40 }}><Text style={{ fontSize: 56 }}>💬</Text><Text style={[S.h3, { marginTop: 12 }]}>No Contacts Yet</Text></View>}
+        {partners.length === 0 && (
+          <View style={{ alignItems: 'center', padding: 40 }}>
+            <Ionicons name="chatbubbles-outline" size={56} color={T.muted} />
+            <Text style={[S.h3, { marginTop: 12 }]}>No Contacts Yet</Text>
+          </View>
+        )}
         {partners.map(p => {
           const prefix      = p.role === 'csr' ? 'CSR' : 'ORG';
           const displayName = `${prefix}–${p.name}`;
@@ -1702,7 +1969,7 @@ const ChatScreen = ({ userData, conversationId, recipientName, onBack }) => {
 
 // ── DASHBOARDS ────────────────────────────────────────────────────────────────
 
-const VolunteerDashboard = ({ userData, handleLogout }) => {
+const VolunteerDashboard = ({ userData, handleLogout, setUserData }) => {
   const [activeTab, setActiveTab] = useState('Home');
   const [events, setEvents]       = useState([]);
   const [evLoading, setEvLoading] = useState(false);
@@ -1744,7 +2011,7 @@ const VolunteerDashboard = ({ userData, handleLogout }) => {
       case 'Home':     return <VolunteerHome userData={userData} />;
       case 'Events':   return <EventsScreen userData={userData} events={events} loading={evLoading} onRegister={handleRegister} onLeave={handleLeave} onOpenGeofence={setGeofenceEvent} />;
       case 'Classify': return <ClassifyScreen userData={userData} />;
-      case 'Rewards':  return <RewardsScreen userData={userData} />;
+      case 'Rewards':  return <RewardsScreen userData={userData} setUserData={setUserData} />;
       case 'Reports':  return <ReportsScreen userData={userData} />;
       case 'Settings': return <SettingsScreen userData={userData} handleLogout={handleLogout} />;
       default: return <View style={S.fullCenter}><Text>Coming soon</Text></View>;
@@ -1850,7 +2117,17 @@ const CSRDashboard = ({ userData, handleLogout, setChatParams }) => {
           {allEvents.map(ev => (
             <TouchableOpacity key={ev._id} style={S.card} onPress={() => viewReport(ev._id)}>
               <Text style={S.h3}>{ev.name}</Text>
-              <Text style={S.caption}>📍 {ev.location} | 📅 {new Date(ev.date).toLocaleDateString()}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Ionicons name="location-outline" size={12} color={T.muted} />
+                  <Text style={S.caption}>{ev.location}</Text>
+                </View>
+                <Text style={[S.caption, { color: T.muted }]}>|</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Ionicons name="calendar-outline" size={12} color={T.muted} />
+                  <Text style={S.caption}>{new Date(ev.date).toLocaleDateString()}</Text>
+                </View>
+              </View>
               <Text style={[S.label, {color: T.primary, marginTop: 10}]}>View Full Analytics →</Text>
             </TouchableOpacity>
           ))}
@@ -1935,7 +2212,7 @@ export default function AppLogic() {
       return <ChatScreen userData={userData} conversationId={chatParams.id} recipientName={chatParams.name} onBack={() => setChatParams(null)} />;
     if (screen === 'dashboard' && userData) {
       const role = userData.role?.toLowerCase();
-      if (role === 'volunteer') return <VolunteerDashboard userData={userData} handleLogout={() => signOut(auth)} />;
+      if (role === 'volunteer') return <VolunteerDashboard userData={userData} setUserData={setUserData} handleLogout={() => signOut(auth)} />;
       if (role === 'organiser') return <OrganiserDashboard userData={userData} handleLogout={() => signOut(auth)} setChatParams={setChatParams} />;
       if (role === 'csr')       return <CSRDashboard userData={userData} handleLogout={() => signOut(auth)} setChatParams={setChatParams} />;
     }

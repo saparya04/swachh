@@ -1,5 +1,19 @@
 const User = require('../models/User.js');
+const Event = require('../models/Event.js');
+const { getGeofenceWindow, pointInGeofence } = require('../helpers/geofenceHelper');
 const { awardXP, checkCertificates, updateMonthlyActivity, XP } = require('../helpers/progressHelper');
+
+function todayYmdIST() {
+  try {
+    return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  } catch {
+    const d = new Date();
+    const y = d.getFullYear();
+    const mo = String(d.getMonth() + 1).padStart(2, '0');
+    const da = String(d.getDate()).padStart(2, '0');
+    return `${y}-${mo}-${da}`;
+  }
+}
 
 // ── Register ──────────────────────────────────────────────────────────────────
 exports.saveUserData = async (req, res) => {
@@ -190,6 +204,100 @@ exports.getCSRStats = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch CSR stats.' });
+  }
+};
+
+// ── Final AI bag classifier: impact samples + optional Rewards XP eligibility ─
+exports.reportFinalAiBag = async (req, res) => {
+  const { firebaseUid, bagPercent } = req.body;
+  if (!firebaseUid || bagPercent == null) return res.status(400).json({ message: 'firebaseUid and bagPercent required.' });
+  const pct = Number(bagPercent);
+  if (!Number.isFinite(pct) || pct <= 0 || pct > 100) {
+    return res.status(400).json({ message: 'bagPercent must be between 1 and 100.' });
+  }
+
+  try {
+    const user = await User.findOne({ firebaseUid });
+    if (!user) return res.status(404).json({ message: 'User not found.' });
+
+    if (!user.finalAiBagSamples) user.finalAiBagSamples = [];
+    user.finalAiBagSamples.push({ bagPercent: pct, recordedAt: new Date() });
+    if (user.finalAiBagSamples.length > 200) {
+      user.finalAiBagSamples = user.finalAiBagSamples.slice(-200);
+    }
+    user.finalAiItemCount = (user.finalAiItemCount || 0) + 1;
+
+    let bonusEligible = false;
+    if (pct > 60) {
+      user.finalAiBagBonusEligible = true;
+      bonusEligible = true;
+    }
+
+    await user.save();
+    return res.status(200).json({ eligible: bonusEligible, recorded: true });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Failed to record bag result.' });
+  }
+};
+
+// ── Rewards screen: apply cleanup-zone + Final AI bonuses ─────────────────────
+exports.claimRewardsBonuses = async (req, res) => {
+  const { firebaseUid, lat, lng } = req.body;
+  if (!firebaseUid) return res.status(400).json({ message: 'firebaseUid required.' });
+
+  try {
+    const user = await User.findOne({ firebaseUid });
+    if (!user) return res.status(404).json({ message: 'User not found.' });
+
+    const messages = [];
+    let geofenceXp = 0;
+    let bagXp = 0;
+    const todayKey = todayYmdIST();
+
+    if (user.role === 'volunteer' && lat != null && lng != null && user.rewardsGeofenceBonusDayIST !== todayKey) {
+      const events = await Event.find({ participants: firebaseUid });
+      const now = new Date();
+      for (const ev of events) {
+        const hasFence =
+          (ev.geofenceLat != null && ev.geofenceLng != null) ||
+          (ev.geofenceCoordinates && ev.geofenceCoordinates.length);
+        if (!hasFence) continue;
+
+        const { start, end } = getGeofenceWindow(ev);
+        if (!start || !end || now < start || now > end) continue;
+
+        if (pointInGeofence(ev, Number(lat), Number(lng))) {
+          awardXP(user, XP.GEOFENCE_REWARDS_BONUS, 'GEOFENCE_REWARDS');
+          user.rewardsGeofenceBonusDayIST = todayKey;
+          geofenceXp = XP.GEOFENCE_REWARDS_BONUS;
+          messages.push(`Inside cleanup zone: +${XP.GEOFENCE_REWARDS_BONUS} XP`);
+          break;
+        }
+      }
+    }
+
+    if (user.finalAiBagBonusEligible) {
+      awardXP(user, XP.FINAL_AI_BAG_BONUS, 'FINAL_AI_BAG');
+      user.finalAiBagBonusEligible = false;
+      bagXp = XP.FINAL_AI_BAG_BONUS;
+      messages.push(`Final AI bag model (>60%): +${XP.FINAL_AI_BAG_BONUS} XP`);
+    }
+
+    if (geofenceXp || bagXp) checkCertificates(user);
+    if (geofenceXp || bagXp) await user.save();
+
+    return res.status(200).json({
+      geofenceXp,
+      bagXp,
+      totalAwarded: geofenceXp + bagXp,
+      messages,
+      totalXP: user.xp,
+      level: user.level,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Failed to claim rewards bonuses.' });
   }
 };
 

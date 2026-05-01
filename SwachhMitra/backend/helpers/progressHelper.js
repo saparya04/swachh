@@ -9,6 +9,10 @@ const XP = {
   SCAN_ITEM:        2,
   EARN_BADGE:     100,
   REFERRAL:        50,
+  /** Rewards tab: inside active cleanup geofence for a joined event (max once/day IST). */
+  GEOFENCE_REWARDS_BONUS: 10,
+  /** Rewards tab: Final AI bag classifier reported >60% (claim once flagged). */
+  FINAL_AI_BAG_BONUS:    50,
 };
 
 // Certificate definitions  ── must mirror what the frontend renders ──────────
