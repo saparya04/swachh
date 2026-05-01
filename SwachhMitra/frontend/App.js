@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, createElement } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator,
-  Alert, ScrollView, Platform, Image, Dimensions, Animated, Modal, StatusBar
+  Alert, ScrollView, Platform, Image, Dimensions, Animated, Modal, StatusBar, Share, Linking
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -19,6 +19,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import LeafletPolygonPicker from './components/LeafletPolygonPicker';
 import io from 'socket.io-client';
+
 
 const socket = io('http://192.168.0.102:5000', { transports: ['websocket'], autoConnect: true });
 
@@ -394,39 +395,80 @@ const ClassifyScreen = ({ userData }) => {
   const bagBonusPostedRef = useRef(false);
   const catColors = { 'Dry': '#0288D1', 'Wet': '#388E3C', 'Hazardous': '#D32F2F', 'E-Waste': '#7B1FA2' };
 
-  const runDetection = async () => {
-    if (!cameraRef.current || !showLiveFeed) return;
+  // const runDetection = async () => {
+  //   if (!cameraRef.current || !showLiveFeed) return;
+  //   try {
+  //     setScanning(true);
+  //     const photo  = await cameraRef.current.takePictureAsync({ base64: true, quality: 0.3 });
+  //     const res    = await axios.post(`${FLASK_URL}/classify_frame`, { image: photo.base64 });
+  //     setProcessedImage(`data:image/jpeg;base64,${res.data.image}`);
+  //     if (res.data.label) {
+  //       const det = { name: res.data.label, type: res.data.category || 'Unknown' };
+  //       setWasteData(det);
+  //       // Log the scan to backend to award XP
+  //       if (userData?.firebaseUid && det.type !== 'Unknown') {
+  //         axios.post(`${BASE_URL}/users/log-scan`, {
+  //           firebaseUid: userData.firebaseUid,
+  //           itemName: det.name,
+  //           category: det.type,
+  //         }).catch(() => {});
+  //       }
+  //     }
+  //   } catch {}
+  //   finally { setScanning(false); }
+  // };
+
+  // useEffect(() => {
+  //   let interval;
+  //   if (showLiveFeed) interval = setInterval(runDetection, 300);
+  //   else { setProcessedImage(null); setWasteData({ name: '', type: '' }); }
+  //   return () => clearInterval(interval);
+  // }, [showLiveFeed]);
+
+  // useEffect(() => {
+  //   if (!showFinalModal) bagBonusPostedRef.current = false;
+  // }, [showFinalModal]);
+  const isComponentMounted = useRef(true);
+const [isLive, setIsLive] = useState(false);
+
+const runLiveStream = async () => {
+    // If user stopped the cam or component unmounted, kill the loop
+    if (!cameraRef.current || !isLive || !isComponentMounted.current) return;
+
     try {
-      setScanning(true);
-      const photo  = await cameraRef.current.takePictureAsync({ base64: true, quality: 0.3 });
-      const res    = await axios.post(`${FLASK_URL}/classify_frame`, { image: photo.base64 });
-      setProcessedImage(`data:image/jpeg;base64,${res.data.image}`);
-      if (res.data.label) {
-        const det = { name: res.data.label, type: res.data.category || 'Unknown' };
-        setWasteData(det);
-        // Log the scan to backend to award XP
-        if (userData?.firebaseUid && det.type !== 'Unknown') {
-          axios.post(`${BASE_URL}/users/log-scan`, {
-            firebaseUid: userData.firebaseUid,
-            itemName: det.name,
-            category: det.type,
-          }).catch(() => {});
+        const photo = await cameraRef.current.takePictureAsync({ 
+            base64: true, 
+            quality: 0.01, // MAXIMUM compression for live speed
+            skipProcessing: true 
+        });
+
+        const res = await axios.post(`${FLASK_URL}/classify_frame`, { 
+            image: photo.base64 
+        }, { timeout: 1000 }); // Don't wait more than 1s
+
+        setProcessedImage(`data:image/jpeg;base64,${res.data.image}`);
+        if (res.data.label !== "None") {
+            setWasteData({ name: res.data.label, type: res.data.category });
         }
-      }
-    } catch {}
-    finally { setScanning(false); }
-  };
+    } catch (e) {
+        console.log("Frame dropped to maintain speed");
+    }
 
-  useEffect(() => {
-    let interval;
-    if (showLiveFeed) interval = setInterval(runDetection, 300);
-    else { setProcessedImage(null); setWasteData({ name: '', type: '' }); }
-    return () => clearInterval(interval);
-  }, [showLiveFeed]);
+    // THE MAGIC: Call the next frame immediately after the previous one finishes
+    // This creates a continuous "Live" feel without overlapping requests
+    requestAnimationFrame(runLiveStream);
+};
 
-  useEffect(() => {
-    if (!showFinalModal) bagBonusPostedRef.current = false;
-  }, [showFinalModal]);
+useEffect(() => {
+    isComponentMounted.current = true;
+    if (showLiveFeed) {
+        setIsLive(true);
+        runLiveStream(); // Start the loop
+    } else {
+        setIsLive(false);
+    }
+    return () => { isComponentMounted.current = false; };
+}, [showLiveFeed]);
 
   const onFinalAiWebMessage = (e) => {
     try {
@@ -1633,6 +1675,19 @@ const AddEventForm = ({ userData, onBack, onSuccess }) => {
 const MyEventsScreen = ({ userData, onAddNew, onSelectEvent, posterDataMap, handleGeneratePoster, generatingPosterFor }) => {
   const [events, setEvents]   = useState([]);
   const [loading, setLoading] = useState(true);
+  const onShare = async (url) => {
+    try {
+      const result = await Share.share({
+        message: `Join our cleanup drive! 🌿 View the poster here: ${url}`,
+        url: url, // Standard for iOS
+      });
+      if (result.action === Share.sharedAction) {
+        console.log("Post shared successfully");
+      }
+    } catch (error) {
+      Alert.alert("Share Error", error.message);
+    }
+  };
 
   useEffect(() => {
     axios.get(`${BACKEND_URL}/api/events/organiser-stats/${userData.firebaseUid}`)
@@ -1675,7 +1730,7 @@ const MyEventsScreen = ({ userData, onAddNew, onSelectEvent, posterDataMap, hand
 
                 {poster && (
                   <>
-                    <TouchableOpacity 
+                    {/* <TouchableOpacity 
                       style={[S.btnPrimary, { flex: 0.7, paddingVertical: 10, backgroundColor: T.accent }]} 
                       onPress={() => window.open(poster.htmlUrl, "_blank")}
                     >
@@ -1684,6 +1739,43 @@ const MyEventsScreen = ({ userData, onAddNew, onSelectEvent, posterDataMap, hand
                     <TouchableOpacity 
                       style={[S.btnPrimary, { flex: 0.7, paddingVertical: 10, backgroundColor: '#6C5CE7' }]} 
                       onPress={() => window.open(poster.pngUrl, "_blank")}
+                    >
+                      <Text style={[S.btnText, { fontSize: 12 }]}>Share</Text>
+                    </TouchableOpacity> */}
+                                        // Inside MyEventsScreen mapping
+                    <TouchableOpacity 
+                      style={[S.btnPrimary, { flex: 0.7, paddingVertical: 10, backgroundColor: T.accent }]} 
+                      onPress={() => {
+                        const url = poster.htmlUrl;
+                        if (Platform.OS === 'web') {
+                          window.open(url, "_blank");
+                        } else {
+                          // For Mobile (Expo Go / Physical Device)
+                          Linking.canOpenURL(url).then(supported => {
+                            if (supported) {
+                              Linking.openURL(url);
+                            } else {
+                              Alert.alert("Error", "Don't know how to open this URL");
+                            }
+                          });
+                        }
+                      }}
+                    >
+                      <Text style={[S.btnText, { fontSize: 12 }]}>View</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                      style={[S.btnPrimary, { flex: 0.7, paddingVertical: 10, backgroundColor: '#6C5CE7' }]} 
+                      onPress={() => {
+                        const url = poster.pngUrl;
+                        if (Platform.OS === 'web') {
+                          window.open(url, "_blank");
+                        } else {
+                          // Use Linking for mobile
+                          // Linking.openURL(url).catch(err => console.error("Couldn't load page", err));
+                          onShare(url);
+                        }
+                      }}
                     >
                       <Text style={[S.btnText, { fontSize: 12 }]}>Share</Text>
                     </TouchableOpacity>
@@ -2004,7 +2096,14 @@ const ChatSelector = ({ userData, onSelectChat, type = 'organiser' }) => {
           // setMyGroups(resG.data);
           setContacts(Array.isArray(resP.data) ? resP.data : []);
           setMyGroups(Array.isArray(resG.data) ? resG.data : []);
-        } else if (type === 'volunteer') {
+        }else if (type === 'csr') {
+          // CSR Partners need to see a list of Organisers
+          const resP = await axios.get(`${BACKEND_URL}/api/users/list-by-role/organiser`);
+          setContacts(resP.data || []);
+          setChatTab('Primary');
+        }
+
+        else if (type === 'volunteer') {
           // Volunteers only see Groups for events they joined
           const res = await axios.get(`${BACKEND_URL}/api/events/all`);
           const joined = res.data.filter(ev => ev.participants?.includes(userData.firebaseUid));
@@ -2329,7 +2428,8 @@ const CSRDashboard = ({ userData, handleLogout, setChatParams }) => {
   const renderContent = () => {
     switch (activeTab) {
       case 'Home': return <CSRHome userData={userData} />;
-      case 'Messages': return <ChatListView userData={userData} onSelectChat={setChatParams} />;
+      case 'Messages': 
+        return <ChatSelector userData={userData} onSelectChat={setChatParams} type="csr" />;
       case 'Reports': return (
         <ScrollView style={{ flex: 1, padding: 20 }}>
           <Text style={S.h1}>Event Impact Reports</Text>
