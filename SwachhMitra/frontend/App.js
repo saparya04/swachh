@@ -20,7 +20,7 @@ import { Picker } from '@react-native-picker/picker';
 import LeafletPolygonPicker from './components/LeafletPolygonPicker';
 import io from 'socket.io-client';
 
-const socket = io('http://172.20.10.5:5000', { transports: ['websocket'], autoConnect: true });
+const socket = io('http://192.168.0.102:5000', { transports: ['websocket'], autoConnect: true });
 
 const firebaseConfig = {
   apiKey: "AIzaSyCTL_q0pfcj0Ut0_20MnR8GThLi9kc5U-E",
@@ -32,9 +32,9 @@ const firebaseConfig = {
   measurementId: "G-2VPF0FER2N"
 };
 
-const BACKEND_URL = 'http://172.20.10.5:5000';
-const BASE_URL    = 'http://172.20.10.5:5000/api';
-const FLASK_URL   = 'http://172.20.10.5:5001';
+const BACKEND_URL = 'http://192.168.0.102:5000';
+const BASE_URL    = 'http://192.168.0.102:5000/api';
+const FLASK_URL   = 'http://192.168.0.102:5001';
 
 const app = initializeApp(firebaseConfig);
 const getPersistenceMethod = () =>
@@ -1532,100 +1532,167 @@ const AddEventForm = ({ userData, onBack, onSuccess }) => {
   );
 };
 
-const MyEventsScreen = ({ userData, onAddNew, onSelectEvent }) => {
+// const MyEventsScreen = ({ userData, onAddNew, onSelectEvent }) => {
+//   const [events, setEvents]   = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [completing, setCompleting] = useState(null); // eventId being completed
+
+//   useEffect(() => {
+//     axios.get(`${BACKEND_URL}/api/events/organiser-stats/${userData.firebaseUid}`)
+//       .then(r => setEvents(r.data)).catch(() => {}).finally(() => setLoading(false));
+//   }, []);
+
+//   const handleComplete = async (ev) => {
+//     // Mark all current participants as attended (simplification — real app would have check-in)
+//     setCompleting(ev._id);
+//     try {
+//       await axios.post(`${BACKEND_URL}/api/events/complete`, {
+//         eventId:      ev._id,
+//         organiserUid: userData.firebaseUid,
+//         attendedUids: ev.participants || [],
+//         kgCollected:  0,   // organiser can update later
+//       });
+//       Alert.alert('Event Completed', 'XP awarded to all participants!');
+//       // Refresh list
+//       const r = await axios.get(`${BACKEND_URL}/api/events/organiser-stats/${userData.firebaseUid}`);
+//       setEvents(r.data);
+//     } catch { Alert.alert('Error', 'Could not complete event.'); }
+//     finally { setCompleting(null); }
+//   };
+
+//   if (loading) return <View style={S.fullCenter}><ActivityIndicator color={T.primary} /></View>;
+//   return (
+//     <View style={{ flex: 1, backgroundColor: T.bg }}>
+//       <GreenHeader title="My Events" bgColor={T.accent} />
+//       <ScrollView contentContainerStyle={{ padding: 16 }}>
+//         <TouchableOpacity style={[S.btnAccent, { marginBottom: 20 }]} onPress={onAddNew}>
+//           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+//             <Ionicons name="add-circle-outline" size={18} color={T.white} />
+//             <Text style={S.btnText}>Create New Event</Text>
+//           </View>
+//         </TouchableOpacity>
+//         {events.length === 0 && (
+//           <View style={{ alignItems: 'center', padding: 40 }}>
+//             <MaterialCommunityIcons name="calendar-blank-outline" size={56} color={T.muted} />
+//             <Text style={[S.h3, { marginTop: 12 }]}>No Events Yet</Text>
+//             <Text style={[S.body, { textAlign: 'center' }]}>Create your first cleanup event above</Text>
+//           </View>
+//         )}
+//         {events.map(ev => (
+//           <View key={ev._id} style={S.card}>
+//             <TouchableOpacity activeOpacity={0.85} onPress={() => onSelectEvent?.(ev)}>
+//               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+//                 <Text style={[S.h3, { flex: 1 }]}>{ev.name}</Text>
+//                 <View style={[S.tag, { backgroundColor: ev.status === 'completed' ? '#E8F5E9' : T.accentLight }]}>
+//                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+//                     {ev.status === 'completed' ? <Ionicons name="checkmark-circle" size={12} color={T.primary} /> : null}
+//                     <Text style={[S.tagText, { color: ev.status === 'completed' ? T.primary : T.accent }]}>
+//                       {ev.status === 'completed' ? 'Done' : `${ev.participants?.length || 0} joined`}
+//                     </Text>
+//                   </View>
+//                 </View>
+//               </View>
+//               <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+//                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+//                   <Ionicons name="location-outline" size={14} color={T.mid} />
+//                   <Text style={S.body}>{ev.location}</Text>
+//                 </View>
+//                 <Text style={[S.body, { color: T.muted }]}>·</Text>
+//                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+//                   <Ionicons name="calendar-outline" size={14} color={T.mid} />
+//                   <Text style={S.body}>{new Date(ev.date).toDateString()}</Text>
+//                 </View>
+//               </View>
+//               <Text style={[S.caption, { marginBottom: 6 }]}>Tap for geofence attendance table →</Text>
+//             </TouchableOpacity>
+//             <View style={{ height: 8, backgroundColor: T.border, borderRadius: 4, marginBottom: 8 }}>
+//               <View style={{ height: '100%', width: `${Math.min(((ev.participants?.length || 0) / ev.volunteersRequired) * 100, 100)}%`, backgroundColor: T.primary, borderRadius: 4 }} />
+//             </View>
+//             <Text style={[S.caption, { marginBottom: 12 }]}>Capacity: {ev.participants?.length || 0} / {ev.volunteersRequired}</Text>
+//             {ev.status !== 'completed' && (
+//               <TouchableOpacity
+//                 onPress={() => handleComplete(ev)}
+//                 disabled={completing === ev._id}
+//                 style={[S.btnAccent, { paddingVertical: 12 }, completing === ev._id && S.btnDisabled]}>
+//                 {completing === ev._id
+//                   ? <ActivityIndicator color={T.white} />
+//                   : (
+//                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+//                       <Ionicons name="checkmark-done-outline" size={18} color={T.white} />
+//                       <Text style={S.btnText}>Mark as Completed</Text>
+//                     </View>
+//                   )}
+//               </TouchableOpacity>
+//             )}
+//           </View>
+//         ))}
+//       </ScrollView>
+//     </View>
+//   );
+// };
+const MyEventsScreen = ({ userData, onAddNew, onSelectEvent, posterDataMap, handleGeneratePoster, generatingPosterFor }) => {
   const [events, setEvents]   = useState([]);
   const [loading, setLoading] = useState(true);
-  const [completing, setCompleting] = useState(null); // eventId being completed
 
   useEffect(() => {
     axios.get(`${BACKEND_URL}/api/events/organiser-stats/${userData.firebaseUid}`)
       .then(r => setEvents(r.data)).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
-  const handleComplete = async (ev) => {
-    // Mark all current participants as attended (simplification — real app would have check-in)
-    setCompleting(ev._id);
-    try {
-      await axios.post(`${BACKEND_URL}/api/events/complete`, {
-        eventId:      ev._id,
-        organiserUid: userData.firebaseUid,
-        attendedUids: ev.participants || [],
-        kgCollected:  0,   // organiser can update later
-      });
-      Alert.alert('Event Completed', 'XP awarded to all participants!');
-      // Refresh list
-      const r = await axios.get(`${BACKEND_URL}/api/events/organiser-stats/${userData.firebaseUid}`);
-      setEvents(r.data);
-    } catch { Alert.alert('Error', 'Could not complete event.'); }
-    finally { setCompleting(null); }
-  };
-
   if (loading) return <View style={S.fullCenter}><ActivityIndicator color={T.primary} /></View>;
+
   return (
     <View style={{ flex: 1, backgroundColor: T.bg }}>
       <GreenHeader title="My Events" bgColor={T.accent} />
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         <TouchableOpacity style={[S.btnAccent, { marginBottom: 20 }]} onPress={onAddNew}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-            <Ionicons name="add-circle-outline" size={18} color={T.white} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Ionicons name="add-circle-outline" size={20} color={T.white} />
             <Text style={S.btnText}>Create New Event</Text>
           </View>
         </TouchableOpacity>
-        {events.length === 0 && (
-          <View style={{ alignItems: 'center', padding: 40 }}>
-            <MaterialCommunityIcons name="calendar-blank-outline" size={56} color={T.muted} />
-            <Text style={[S.h3, { marginTop: 12 }]}>No Events Yet</Text>
-            <Text style={[S.body, { textAlign: 'center' }]}>Create your first cleanup event above</Text>
-          </View>
-        )}
-        {events.map(ev => (
-          <View key={ev._id} style={S.card}>
-            <TouchableOpacity activeOpacity={0.85} onPress={() => onSelectEvent?.(ev)}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                <Text style={[S.h3, { flex: 1 }]}>{ev.name}</Text>
-                <View style={[S.tag, { backgroundColor: ev.status === 'completed' ? '#E8F5E9' : T.accentLight }]}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    {ev.status === 'completed' ? <Ionicons name="checkmark-circle" size={12} color={T.primary} /> : null}
-                    <Text style={[S.tagText, { color: ev.status === 'completed' ? T.primary : T.accent }]}>
-                      {ev.status === 'completed' ? 'Done' : `${ev.participants?.length || 0} joined`}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <Ionicons name="location-outline" size={14} color={T.mid} />
-                  <Text style={S.body}>{ev.location}</Text>
-                </View>
-                <Text style={[S.body, { color: T.muted }]}>·</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <Ionicons name="calendar-outline" size={14} color={T.mid} />
-                  <Text style={S.body}>{new Date(ev.date).toDateString()}</Text>
-                </View>
-              </View>
-              <Text style={[S.caption, { marginBottom: 6 }]}>Tap for geofence attendance table →</Text>
-            </TouchableOpacity>
-            <View style={{ height: 8, backgroundColor: T.border, borderRadius: 4, marginBottom: 8 }}>
-              <View style={{ height: '100%', width: `${Math.min(((ev.participants?.length || 0) / ev.volunteersRequired) * 100, 100)}%`, backgroundColor: T.primary, borderRadius: 4 }} />
-            </View>
-            <Text style={[S.caption, { marginBottom: 12 }]}>Capacity: {ev.participants?.length || 0} / {ev.volunteersRequired}</Text>
-            {ev.status !== 'completed' && (
-              <TouchableOpacity
-                onPress={() => handleComplete(ev)}
-                disabled={completing === ev._id}
-                style={[S.btnAccent, { paddingVertical: 12 }, completing === ev._id && S.btnDisabled]}>
-                {completing === ev._id
-                  ? <ActivityIndicator color={T.white} />
-                  : (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                      <Ionicons name="checkmark-done-outline" size={18} color={T.white} />
-                      <Text style={S.btnText}>Mark as Completed</Text>
-                    </View>
-                  )}
+
+        {events.map(ev => {
+          const poster = posterDataMap[ev._id];
+          return (
+            <View key={ev._id} style={S.card}>
+              <TouchableOpacity activeOpacity={0.85} onPress={() => onSelectEvent?.(ev)}>
+                <Text style={S.h3}>{ev.name}</Text>
+                <Text style={[S.body, { marginBottom: 10 }]}>📍 {ev.location} · 📅 {new Date(ev.date).toDateString()}</Text>
               </TouchableOpacity>
-            )}
-          </View>
-        ))}
+
+              {/* POSTER ACTIONS */}
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+                <TouchableOpacity 
+                  style={[S.btnPrimary, { flex: 1, paddingVertical: 10, backgroundColor: '#FF6B35' }]} 
+                  onPress={() => handleGeneratePoster(ev._id, ev.name)}
+                  disabled={generatingPosterFor === ev._id}
+                >
+                  <Text style={[S.btnText, { fontSize: 12 }]}>
+                    {generatingPosterFor === ev._id ? "Thinking..." : "AI Poster"}
+                  </Text>
+                </TouchableOpacity>
+
+                {poster && (
+                  <>
+                    <TouchableOpacity 
+                      style={[S.btnPrimary, { flex: 0.7, paddingVertical: 10, backgroundColor: T.accent }]} 
+                      onPress={() => window.open(poster.htmlUrl, "_blank")}
+                    >
+                      <Text style={[S.btnText, { fontSize: 12 }]}>View</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[S.btnPrimary, { flex: 0.7, paddingVertical: 10, backgroundColor: '#6C5CE7' }]} 
+                      onPress={() => window.open(poster.pngUrl, "_blank")}
+                    >
+                      <Text style={[S.btnText, { fontSize: 12 }]}>Share</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
+            </View>
+          );
+        })}
       </ScrollView>
     </View>
   );
@@ -1876,43 +1943,121 @@ const CSRHome = ({ userData }) => {
 
 // ── CHAT ──────────────────────────────────────────────────────────────────────
 
-const ChatListView = ({ userData, onSelectChat }) => {
-  const [partners, setPartners] = useState([]);
-  const [loading, setLoading]   = useState(true);
+// const ChatListView = ({ userData, onSelectChat }) => {
+//   const [partners, setPartners] = useState([]);
+//   const [loading, setLoading]   = useState(true);
+//   useEffect(() => {
+//     const targetRole = userData.role === 'organiser' ? 'csr' : 'organiser';
+//     axios.get(`${BACKEND_URL}/api/users/list-by-role/${targetRole}`)
+//       .then(r => setPartners(r.data)).catch(() => {}).finally(() => setLoading(false));
+//   }, []);
+//   if (loading) return <View style={S.fullCenter}><ActivityIndicator color={T.primary} /></View>;
+//   return (
+//     <View style={{ flex: 1, backgroundColor: T.bg }}>
+//       <GreenHeader title="Messages" subtitle="Connect with partners" />
+//       <ScrollView contentContainerStyle={{ padding: 16 }}>
+//         {partners.length === 0 && (
+//           <View style={{ alignItems: 'center', padding: 40 }}>
+//             <Ionicons name="chatbubbles-outline" size={56} color={T.muted} />
+//             <Text style={[S.h3, { marginTop: 12 }]}>No Contacts Yet</Text>
+//           </View>
+//         )}
+//         {partners.map(p => {
+//           const prefix      = p.role === 'csr' ? 'CSR' : 'ORG';
+//           const displayName = `${prefix}–${p.name}`;
+//           return (
+//             <TouchableOpacity key={p.firebaseUid}
+//               onPress={() => onSelectChat({ id: [userData.firebaseUid, p.firebaseUid].sort().join('_'), name: displayName })}
+//               style={[S.card, { flexDirection: 'row', alignItems: 'center', padding: 16 }]}>
+//               <View style={[S.avatar, { backgroundColor: p.role === 'csr' ? '#4527A0' : T.accent }]}>
+//                 <Text style={S.avatarText}>{p.name.charAt(0).toUpperCase()}</Text>
+//               </View>
+//               <View style={{ flex: 1, marginLeft: 14 }}>
+//                 <Text style={[S.h3, { fontSize: 15 }]}>{displayName}</Text>
+//                 <Text style={S.caption}>Tap to start conversation</Text>
+//               </View>
+//               <Text style={{ color: T.muted, fontSize: 22 }}>›</Text>
+//             </TouchableOpacity>
+//           );
+//         })}
+//       </ScrollView>
+//     </View>
+//   );
+// };
+const ChatSelector = ({ userData, onSelectChat, type = 'organiser' }) => {
+  const [chatTab, setChatTab] = useState('Primary'); // 'Primary' (1-on-1) or 'Groups'
+  const [contacts, setContacts] = useState([]);
+  const [myGroups, setMyGroups] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    const targetRole = userData.role === 'organiser' ? 'csr' : 'organiser';
-    axios.get(`${BACKEND_URL}/api/users/list-by-role/${targetRole}`)
-      .then(r => setPartners(r.data)).catch(() => {}).finally(() => setLoading(false));
+    const loadChats = async () => {
+      try {
+        setLoading(true);
+        if (type === 'organiser') {
+          // Organisers see CSR Partners and their own Events (Groups)
+          const [resP, resG] = await Promise.all([
+            axios.get(`${BACKEND_URL}/api/users/list-by-role/csr`),
+            axios.get(`${BACKEND_URL}/api/events/organiser-stats/${userData.firebaseUid}`)
+          ]);
+          // setContacts(resP.data);
+          // setMyGroups(resG.data);
+          setContacts(Array.isArray(resP.data) ? resP.data : []);
+          setMyGroups(Array.isArray(resG.data) ? resG.data : []);
+        } else if (type === 'volunteer') {
+          // Volunteers only see Groups for events they joined
+          const res = await axios.get(`${BACKEND_URL}/api/events/all`);
+          const joined = res.data.filter(ev => ev.participants?.includes(userData.firebaseUid));
+          setMyGroups(joined);
+          setChatTab('Groups'); // Default for volunteers
+        }
+      } catch (e) { console.error("Chat list load failed:", e); }
+      finally { setLoading(false); }
+    };
+    loadChats();
   }, []);
-  if (loading) return <View style={S.fullCenter}><ActivityIndicator color={T.primary} /></View>;
+
+  if (loading) return <ActivityIndicator style={{marginTop: 50}} color={T.primary} />;
+
   return (
     <View style={{ flex: 1, backgroundColor: T.bg }}>
-      <GreenHeader title="Messages" subtitle="Connect with partners" />
+      <GreenHeader title="Messages" bgColor={type === 'volunteer' ? T.primary : T.accent} />
+      
+      {/* Tab Switcher (Only for Organiser) */}
+      {type === 'organiser' && (
+        <View style={{ flexDirection: 'row', padding: 16, gap: 10 }}>
+          <TouchableOpacity onPress={() => setChatTab('Primary')} style={[S.chip, {flex:1}, chatTab === 'Primary' && {backgroundColor: T.accent}]}>
+            <Text style={[chatTab === 'Primary' && {color: 'white', fontWeight:'700'}]}>CSR Partners</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setChatTab('Groups')} style={[S.chip, {flex:1}, chatTab === 'Groups' && {backgroundColor: T.accent}]}>
+            <Text style={[chatTab === 'Groups' && {color: 'white', fontWeight:'700'}]}>Volunteer Groups</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       <ScrollView contentContainerStyle={{ padding: 16 }}>
-        {partners.length === 0 && (
-          <View style={{ alignItems: 'center', padding: 40 }}>
-            <Ionicons name="chatbubbles-outline" size={56} color={T.muted} />
-            <Text style={[S.h3, { marginTop: 12 }]}>No Contacts Yet</Text>
-          </View>
-        )}
-        {partners.map(p => {
-          const prefix      = p.role === 'csr' ? 'CSR' : 'ORG';
-          const displayName = `${prefix}–${p.name}`;
-          return (
-            <TouchableOpacity key={p.firebaseUid}
-              onPress={() => onSelectChat({ id: [userData.firebaseUid, p.firebaseUid].sort().join('_'), name: displayName })}
-              style={[S.card, { flexDirection: 'row', alignItems: 'center', padding: 16 }]}>
-              <View style={[S.avatar, { backgroundColor: p.role === 'csr' ? '#4527A0' : T.accent }]}>
-                <Text style={S.avatarText}>{p.name.charAt(0).toUpperCase()}</Text>
-              </View>
-              <View style={{ flex: 1, marginLeft: 14 }}>
-                <Text style={[S.h3, { fontSize: 15 }]}>{displayName}</Text>
-                <Text style={S.caption}>Tap to start conversation</Text>
-              </View>
-              <Text style={{ color: T.muted, fontSize: 22 }}>›</Text>
+        {chatTab === 'Primary' ? (
+          contacts.map(p => (
+            <TouchableOpacity key={p.firebaseUid} 
+              onPress={() => onSelectChat({ id: [userData.firebaseUid, p.firebaseUid].sort().join('_'), name: `CSR: ${p.name}` })}
+              style={[S.card, {flexDirection:'row', alignItems:'center'}]}>
+              <View style={[S.avatar, {backgroundColor: '#4527A0'}]}><Text style={S.avatarText}>{p.name[0]}</Text></View>
+              <Text style={[S.h3, {marginLeft:15}]}>{p.name}</Text>
             </TouchableOpacity>
-          );
-        })}
+          ))
+        ) : (
+          myGroups.map(ev => (
+            <TouchableOpacity key={ev._id} 
+              onPress={() => onSelectChat({ id: ev._id, name: `Team: ${ev.name}` })}
+              style={[S.card, {flexDirection:'row', alignItems:'center'}]}>
+              <View style={[S.avatar, {backgroundColor: T.primaryMid}]}><Text style={S.avatarText}>👥</Text></View>
+              <View style={{marginLeft:15}}>
+                <Text style={S.h3}>{ev.name}</Text>
+                <Text style={S.caption}>Event Group Chat</Text>
+              </View>
+            </TouchableOpacity>
+          ))
+        )}
       </ScrollView>
     </View>
   );
@@ -1969,7 +2114,7 @@ const ChatScreen = ({ userData, conversationId, recipientName, onBack }) => {
 
 // ── DASHBOARDS ────────────────────────────────────────────────────────────────
 
-const VolunteerDashboard = ({ userData, handleLogout, setUserData }) => {
+const VolunteerDashboard = ({ userData, handleLogout, setUserData, setChatParams }) => {
   const [activeTab, setActiveTab] = useState('Home');
   const [events, setEvents]       = useState([]);
   const [evLoading, setEvLoading] = useState(false);
@@ -2005,13 +2150,15 @@ const VolunteerDashboard = ({ userData, handleLogout, setUserData }) => {
     );
   }
 
-  const tabs = ['Home', 'Events', 'Classify', 'Rewards', 'Reports', 'Settings'];
+  const tabs = ['Home', 'Events', 'Classify', 'Messages', 'Rewards', 'Reports', 'Settings'];
   const renderContent = () => {
     switch (activeTab) {
       case 'Home':     return <VolunteerHome userData={userData} />;
       case 'Events':   return <EventsScreen userData={userData} events={events} loading={evLoading} onRegister={handleRegister} onLeave={handleLeave} onOpenGeofence={setGeofenceEvent} />;
       case 'Classify': return <ClassifyScreen userData={userData} />;
       case 'Rewards':  return <RewardsScreen userData={userData} setUserData={setUserData} />;
+      case 'Messages': 
+        return <ChatSelector userData={userData} onSelectChat={setChatParams} type="volunteer" />;
       case 'Reports':  return <ReportsScreen userData={userData} />;
       case 'Settings': return <SettingsScreen userData={userData} handleLogout={handleLogout} />;
       default: return <View style={S.fullCenter}><Text>Coming soon</Text></View>;
@@ -2025,49 +2172,28 @@ const VolunteerDashboard = ({ userData, handleLogout, setUserData }) => {
   );
 };
 
-const OrganiserDashboard = ({ userData, handleLogout, setChatParams }) => {
-  const [activeTab, setActiveTab]   = useState('Home');
-  const [showAddEvent, setShowAddEvent] = useState(false);
-  const [detailEvent, setDetailEvent] = useState(null);
-  if (detailEvent) {
-    return (
-      <OrganiserEventDetailScreen
-        userData={userData}
-        ev={detailEvent}
-        onBack={() => setDetailEvent(null)}
-      />
-    );
-  }
-  if (showAddEvent) return <AddEventForm userData={userData} onBack={() => setShowAddEvent(false)} onSuccess={() => setShowAddEvent(false)} />;
-  const tabs = ['Home', 'Events', 'Messages', 'Analytics', 'Settings'];
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'Home':      return <OrganiserHome userData={userData} />;
-      case 'Events':    return <MyEventsScreen userData={userData} onAddNew={() => setShowAddEvent(true)} onSelectEvent={setDetailEvent} />;
-      case 'Messages':  return <ChatListView userData={userData} onSelectChat={setChatParams} />;
-      case 'Analytics': return <AnalyticsScreen userData={userData} />;
-      case 'Settings':  return <SettingsScreen userData={userData} handleLogout={handleLogout} />;
-      default: return <View style={S.fullCenter}><Text>Coming soon</Text></View>;
-    }
-  };
-  return (
-    <View style={S.flex}>
-      <View style={S.flex}>{renderContent()}</View>
-      <TabBar activeTab={activeTab} setActiveTab={setActiveTab} tabs={tabs} />
-    </View>
-  );
-};
-
-// const CSRDashboard = ({ userData, handleLogout, setChatParams }) => {
-//   const [activeTab, setActiveTab] = useState('Home');
-//   const tabs = ['Home', 'Reports', 'Messages', 'Rewards', 'Settings'];
+// const OrganiserDashboard = ({ userData, handleLogout, setChatParams }) => {
+//   const [activeTab, setActiveTab]   = useState('Home');
+//   const [showAddEvent, setShowAddEvent] = useState(false);
+//   const [detailEvent, setDetailEvent] = useState(null);
+//   if (detailEvent) {
+//     return (
+//       <OrganiserEventDetailScreen
+//         userData={userData}
+//         ev={detailEvent}
+//         onBack={() => setDetailEvent(null)}
+//       />
+//     );
+//   }
+//   if (showAddEvent) return <AddEventForm userData={userData} onBack={() => setShowAddEvent(false)} onSuccess={() => setShowAddEvent(false)} />;
+//   const tabs = ['Home', 'Events', 'Messages', 'Analytics', 'Settings'];
 //   const renderContent = () => {
 //     switch (activeTab) {
-//       case 'Home':     return <CSRHome userData={userData} />;
-//       case 'Reports':  return <ReportsScreen userData={userData} />;
-//       case 'Messages': return <ChatListView userData={userData} onSelectChat={setChatParams} />;
-//       case 'Rewards':  return <RewardsScreen userData={userData} />;
-//       case 'Settings': return <SettingsScreen userData={userData} handleLogout={handleLogout} />;
+//       case 'Home':      return <OrganiserHome userData={userData} />;
+//       case 'Events':    return <MyEventsScreen userData={userData} onAddNew={() => setShowAddEvent(true)} onSelectEvent={setDetailEvent} />;
+//       case 'Messages':  return <ChatListView userData={userData} onSelectChat={setChatParams} />;
+//       case 'Analytics': return <AnalyticsScreen userData={userData} />;
+//       case 'Settings':  return <SettingsScreen userData={userData} handleLogout={handleLogout} />;
 //       default: return <View style={S.fullCenter}><Text>Coming soon</Text></View>;
 //     }
 //   };
@@ -2078,6 +2204,100 @@ const OrganiserDashboard = ({ userData, handleLogout, setChatParams }) => {
 //     </View>
 //   );
 // };
+
+const OrganiserDashboard = ({ userData, handleLogout, setChatParams }) => {
+  const [activeTab, setActiveTab] = useState('Home');
+  const [showAddEvent, setShowAddEvent] = useState(false);
+  const [detailEvent, setDetailEvent] = useState(null);
+  
+  // POSTER INTEGRATION STATE
+  const [generatingPosterFor, setGeneratingPosterFor] = useState(null);
+  const [posterDataMap, setPosterDataMap] = useState({});
+
+  // Function to call the Backend (eventController.generateEventPoster)
+  const handleGeneratePoster = async (eventId, eventName) => {
+    setGeneratingPosterFor(eventId);
+    try {
+      const res = await axios.post(`${BACKEND_URL}/api/events/${eventId}/generate-poster`);
+
+      if (res.data.success) {
+        setPosterDataMap((prev) => ({
+          ...prev,
+          [eventId]: {
+            htmlUrl: res.data.htmlUrl,
+            pngUrl: res.data.pngUrl,
+          },
+        }));
+        Alert.alert("Poster Generated! 🎉", `AI has created the poster for ${eventName}.`);
+      } else {
+        Alert.alert("Error", res.data.message || "Failed to generate poster");
+      }
+    } catch (err) {
+      console.error("Poster Error:", err);
+      Alert.alert("Error", "Could not connect to the poster service.");
+    } finally {
+      setGeneratingPosterFor(null);
+    }
+  };
+
+  if (detailEvent) {
+    return (
+      <OrganiserEventDetailScreen
+        userData={userData}
+        ev={detailEvent}
+        onBack={() => setDetailEvent(null)}
+      />
+    );
+  }
+
+  if (showAddEvent) {
+    return (
+      <AddEventForm 
+        userData={userData} 
+        onBack={() => setShowAddEvent(false)} 
+        onSuccess={() => setShowAddEvent(false)} 
+      />
+    );
+  }
+
+  const tabs = ['Home', 'Events', 'Messages', 'Analytics', 'Settings'];
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'Home':      return <OrganiserHome userData={userData} />;
+      case 'Events':    
+        return (
+          <MyEventsScreen 
+            userData={userData} 
+            onAddNew={() => setShowAddEvent(true)} 
+            onSelectEvent={setDetailEvent}
+            // Pass poster state down
+            posterDataMap={posterDataMap}
+            handleGeneratePoster={handleGeneratePoster}
+            generatingPosterFor={generatingPosterFor}
+          />
+        );
+      // case 'Messages':  return <ChatListView userData={userData} onSelectChat={setChatParams} />;
+      case 'Messages': 
+        return <ChatSelector userData={userData} onSelectChat={setChatParams} type="organiser" />;
+      case 'Analytics': return <AnalyticsScreen userData={userData} />;
+      case 'Settings':  return <SettingsScreen userData={userData} handleLogout={handleLogout} />;
+      default: return <View style={S.fullCenter}><Text>Coming soon</Text></View>;
+    }
+  };
+
+  return (
+    <View style={S.flex}>
+      <View style={S.flex}>{renderContent()}</View>
+      <TabBar activeTab={activeTab} setActiveTab={setActiveTab} tabs={tabs} />
+    </View>
+  );
+};
+
+
+
+
+
 const CSRDashboard = ({ userData, handleLogout, setChatParams }) => {
   const [activeTab, setActiveTab] = useState('Home');
   const [allEvents, setAllEvents] = useState([]);
@@ -2212,7 +2432,7 @@ export default function AppLogic() {
       return <ChatScreen userData={userData} conversationId={chatParams.id} recipientName={chatParams.name} onBack={() => setChatParams(null)} />;
     if (screen === 'dashboard' && userData) {
       const role = userData.role?.toLowerCase();
-      if (role === 'volunteer') return <VolunteerDashboard userData={userData} setUserData={setUserData} handleLogout={() => signOut(auth)} />;
+      if (role === 'volunteer') return <VolunteerDashboard userData={userData} setUserData={setUserData} handleLogout={() => signOut(auth)} setChatParams={setChatParams}/>;
       if (role === 'organiser') return <OrganiserDashboard userData={userData} handleLogout={() => signOut(auth)} setChatParams={setChatParams} />;
       if (role === 'csr')       return <CSRDashboard userData={userData} handleLogout={() => signOut(auth)} setChatParams={setChatParams} />;
     }

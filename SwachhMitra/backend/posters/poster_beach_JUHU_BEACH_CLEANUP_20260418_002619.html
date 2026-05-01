@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>JUHU BEACH CLEANUP – Beach Cleanup Poster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Raleway:wght@300;400;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet"/>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --white:      #ffffff;
+    --cream:      #fdf6ec;
+    --gold:       #e8a840;
+    --amber:      #c97b38;
+    --deep-sea:   #1a3a5c;
+    --ocean-blue: #2d6a9f;
+    --sand:       #f2d8b0;
+    --card-w:     520px;
+    --card-h:     740px;
+  }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: #0d1f33;
+    font-family: 'Raleway', sans-serif;
+  }
+
+  .poster {
+    position: relative;
+    width:  var(--card-w);
+    height: var(--card-h);
+    overflow: hidden;
+    border-radius: 20px;
+    box-shadow: 0 40px 100px rgba(0,0,0,.7), 0 0 0 1px rgba(232,168,64,.25);
+    background: linear-gradient(175deg, #b8d4e8 0%, #e8c87a 35%, #d4956a 55%, #c4744a 70%, #a85c38 85%, #8c4530 100%);
+  }
+
+  /* Wave shimmer overlay at bottom */
+  .poster::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(to bottom,
+        rgba(26,58,92,.08)   0%,
+        rgba(26,58,92,.05)  30%,
+        rgba(13,31,51,.35)  55%,
+        rgba(13,31,51,.82)  72%,
+        rgba(10,22,38,.96) 100%
+      );
+    z-index: 1;
+  }
+
+  /* Subtle warm light burst top-right */
+  .poster::after {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(232,168,64,.22) 0%, transparent 65%);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .content {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 40px 44px;
+  }
+
+  /* Top accent bar — ocean wave style */
+  .top-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, var(--ocean-blue), var(--gold), transparent);
+    opacity: .65;
+  }
+
+  /* Wave decorative icon */
+  .wave-icon {
+    margin-bottom: 10px;
+    opacity: .75;
+  }
+
+  /* Script header */
+  .headline {
+    font-family: 'Dancing Script', cursive;
+    font-size: 66px;
+    line-height: 1;
+    color: var(--white);
+    text-shadow: 0 2px 24px rgba(0,0,0,.55);
+    margin-bottom: 3px;
+  }
+  .headline span { color: var(--gold); }
+
+  /* Subtitle / event name */
+  .event-title {
+    font-family: 'Raleway', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 4.5px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .divider-line {
+    height: 1px;
+    width: 36px;
+    background: var(--gold);
+    opacity: .55;
+  }
+  .divider-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--gold);
+    opacity: .7;
+  }
+
+  /* Invite text */
+  .invite {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 13.5px;
+    line-height: 1.75;
+    color: rgba(253,246,236,.75);
+    margin-bottom: 20px;
+  }
+  .invite p { margin: 0; }
+
+  /* Details */
+  .details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 20px;
+    margin-bottom: 20px;
+  }
+  .detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .detail-label {
+    font-size: 8.5px;
+    letter-spacing: 2.8px;
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: .7;
+  }
+  .detail-value {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--white);
+  }
+
+  /* Volunteers badge */
+  .volunteers {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(45,106,159,.22);
+    border: 1px solid rgba(232,168,64,.4);
+    border-radius: 8px;
+    padding: 10px 16px;
+    color: var(--gold);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .6px;
+  }
+
+  /* Small wave SVG bottom decoration */
+  .waves-deco {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    opacity: .18;
+    z-index: 1;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+<div class="poster">
+  <div class="top-bar"></div>
+
+  <!-- Decorative waves at poster bottom -->
+  <svg class="waves-deco" viewBox="0 0 520 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,40 C80,10 160,70 260,40 C360,10 440,70 520,40 L520,80 L0,80 Z" fill="#2d6a9f"/>
+    <path d="M0,55 C100,30 200,75 300,50 C400,25 460,65 520,55 L520,80 L0,80 Z" fill="#e8a840" opacity=".5"/>
+  </svg>
+
+  <div class="content">
+    <!-- Wave icon -->
+    <div class="wave-icon">
+      <svg width="36" height="20" viewBox="0 0 36 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 10 C6 4, 10 16, 14 10 C18 4, 22 16, 26 10 C30 4, 34 14, 34 10"
+              stroke="#e8a840" stroke-width="2" stroke-linecap="round" fill="none" opacity=".8"/>
+        <path d="M2 16 C6 10, 10 22, 14 16 C18 10, 22 22, 26 16 C30 10, 34 20, 34 16"
+              stroke="#e8a840" stroke-width="1.5" stroke-linecap="round" fill="none" opacity=".45"/>
+      </svg>
+    </div>
+
+    <div class="headline">Ocean<span>.</span></div>
+    <div class="event-title">JUHU BEACH CLEANUP</div>
+
+    <div class="divider">
+      <div class="divider-line"></div>
+      <div class="divider-dot"></div>
+      <div class="divider-line"></div>
+    </div>
+
+    <div class="invite"><p>Join us in our mission to create a cleaner, greener,</p><p>and more beautiful beach! We warmly invite you to</p><p>participate in our cleanup drive, where we will unite</p><p>to protect our ocean and coastline.</p></div>
+
+    <div class="details">
+      <div class="detail-item">
+        <span class="detail-label">Date</span>
+        <span class="detail-value">Date TBD</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Time</span>
+        <span class="detail-value">9:00</span>
+      </div>
+      <div class="detail-item" style="grid-column: 1 / -1;">
+        <span class="detail-label">Location</span>
+        <span class="detail-value">Juhu</span>
+      </div>
+    </div>
+
+    <div class="volunteers">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      Volunteers Required: 80
+    </div>
+  </div>
+</div>
+</body>
+</html>

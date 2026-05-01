@@ -4,6 +4,7 @@ const cors       = require('cors');
 const dotenv     = require('dotenv');
 const http       = require('http');
 const { Server } = require('socket.io');
+const path = require('path');
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ mongoose.connect(process.env.MONGO_URI)
 // ── API ───────────────────────────────────────────────────────────────────────
 app.use('/api/users',  userRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/posters', express.static(path.join(__dirname, 'posters')));
 
 // ── Chat history (kept as direct route for backwards compatibility) ────────────
 app.get('/api/messages/:conversationId', async (req, res) => {
@@ -47,22 +49,36 @@ app.get('/', (req, res) => res.send('SwachhMitra Backend is running! 🌱'));
 const server = http.createServer(app);
 const io     = new Server(server, { cors: { origin: '*' } });
 
-io.on('connection', socket => {
-  console.log('Socket connected:', socket.id);
+// io.on('connection', socket => {
+//   console.log('Socket connected:', socket.id);
 
+//   socket.on('joinRoom', ({ conversationId }) => {
+//     socket.join(conversationId);
+//   });
+
+//   socket.on('sendMessage', async data => {
+//     const { conversationId, senderId, senderName, text } = data;
+//     const msg = new Message({ conversationId, senderId, senderName, text });
+//     await msg.save();
+//     io.to(conversationId).emit('newMessage', msg);
+//   });
+
+//   socket.on('disconnect', () => {
+//     console.log('Socket disconnected:', socket.id);
+//   });
+// });
+io.on('connection', (socket) => {
   socket.on('joinRoom', ({ conversationId }) => {
-    socket.join(conversationId);
+    socket.join(conversationId); // Joins either the EventID room or sorted UID room
   });
 
-  socket.on('sendMessage', async data => {
+  socket.on('sendMessage', async (data) => {
     const { conversationId, senderId, senderName, text } = data;
-    const msg = new Message({ conversationId, senderId, senderName, text });
-    await msg.save();
-    io.to(conversationId).emit('newMessage', msg);
-  });
-
-  socket.on('disconnect', () => {
-    console.log('Socket disconnected:', socket.id);
+    const newMessage = new Message({ conversationId, senderId, senderName, text });
+    await newMessage.save();
+    
+    // Broadcast to everyone in that specific Event or Private room
+    io.to(conversationId).emit('newMessage', newMessage);
   });
 });
 
