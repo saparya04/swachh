@@ -18,7 +18,7 @@ import { Picker } from '@react-native-picker/picker';
 import LeafletPolygonPicker from './components/LeafletPolygonPicker';
 import io from 'socket.io-client';
 
-const socket = io('http://192.168.0.102:5000', { transports: ['websocket'], autoConnect: true });
+const socket = io('http://192.168.1.9:5000', { transports: ['websocket'], autoConnect: true });
 
 const firebaseConfig = {
   apiKey: "AIzaSyCTL_q0pfcj0Ut0_20MnR8GThLi9kc5U-E",
@@ -30,9 +30,9 @@ const firebaseConfig = {
   measurementId: "G-2VPF0FER2N"
 };
 
-const BACKEND_URL = 'http://192.168.0.102:5000';
-const BASE_URL    = 'http://192.168.0.102:5000/api';
-const FLASK_URL   = 'http://192.168.0.102:5001';
+const BACKEND_URL = 'http://192.168.1.9:5000';
+const BASE_URL    = 'http://192.168.1.9:5000/api';
+const FLASK_URL   = 'http://192.168.1.9:5001';
 
 const app = initializeApp(firebaseConfig);
 const getPersistenceMethod = () =>
