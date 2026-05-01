@@ -38,7 +38,7 @@ const firebaseConfig = {
   measurementId: "G-2VPF0FER2N",
 };
 
-const BACKEND_URL = "http://192.168.0.195:5000"; // Ensure this matches your IPv4
+const BACKEND_URL = "http://192.168.0.196:5000"; // Ensure this matches your IPv4
 
 const app = initializeApp(firebaseConfig);
 const getPersistenceMethod = () =>
